@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>SkillNexus | Cyber Admin Console</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        :root {
+            --bg-primary: #0a0f1a;
+            --bg-card: rgba(18, 28, 35, 0.85);
+            --neon: #00ffaa;
+            --neon-glow: 0 0 15px rgba(0, 255, 170, 0.3);
+            --border-glow: 1px solid rgba(0, 255, 170, 0.25);
+            --text-primary: #eef5ff;
+            --text-secondary: #8a9bb5;
+            --danger: #ff4757;
+            --warning: #ffa502;
+            --success: #2ed573;
+        }
+        body { background: radial-gradient(ellipse at 30% 20%, #0a121f, #03060c); color: var(--text-primary); min-height: 100vh; overflow-x: hidden; }
+        #particle-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
+        .app-layout { display: flex; min-height: 100vh; position: relative; z-index: 2; }
+        .sidebar { width: 260px; background: rgba(8, 18, 28, 0.95); backdrop-filter: blur(20px); border-right: var(--border-glow); transition: all 0.3s ease; position: fixed; height: 100vh; z-index: 100; display: flex; flex-direction: column; padding: 20px 14px; }
+        .sidebar.collapsed { width: 75px; }
+        .sidebar.collapsed .sidebar-link span, .sidebar.collapsed .logo-text { display: none; }
+        .sidebar.collapsed .sidebar-link i { margin-right: 0; font-size: 1.4rem; }
+        .logo-area { display: flex; align-items: center; gap: 10px; padding: 0 10px 20px 10px; border-bottom: 1px solid rgba(0,255,170,0.2); margin-bottom: 20px; }
+        .logo-icon { font-size: 1.8rem; filter: drop-shadow(0 0 8px var(--neon)); }
+        .logo-text { font-weight: 700; font-size: 1.1rem; background: linear-gradient(135deg, #fff, var(--neon)); background-clip: text; -webkit-background-clip: text; color: transparent; }
+        .sidebar-nav { flex: 1; }
+        .sidebar-link { display: flex; align-items: center; gap: 12px; padding: 10px 14px; margin: 3px 0; border-radius: 12px; color: var(--text-secondary); font-weight: 500; transition: all 0.2s; cursor: pointer; }
+        .sidebar-link i { width: 22px; font-size: 1.1rem; }
+        .sidebar-link.active, .sidebar-link:hover { background: rgba(0, 255, 170, 0.12); color: var(--neon); border-left: 3px solid var(--neon); }
+        .main-content { flex: 1; margin-left: 260px; padding: 15px 20px; transition: margin-left 0.3s; }
+        .sidebar.collapsed + .main-content { margin-left: 75px; }
+        .top-navbar { display: none; justify-content: space-between; align-items: center; background: rgba(12, 22, 32, 0.7); backdrop-filter: blur(16px); border-radius: 20px; padding: 8px 16px; margin-bottom: 20px; border: var(--border-glow); flex-wrap: wrap; gap: 10px; }
+        .top-navbar.show-top-navbar { display: flex; }
+        .search-global { background: rgba(0,0,0,0.3); border-radius: 30px; padding: 7px 14px; flex: 1; min-width: 160px; border: 1px solid rgba(0,255,170,0.3); display: flex; align-items: center; gap: 8px; }
+        .search-global input { background: transparent; border: none; color: white; outline: none; width: 100%; font-size: 0.85rem; }
+        .nav-icons { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .icon-badge { position: relative; cursor: pointer; font-size: 1.1rem; }
+        .badge-count { position: absolute; top: -8px; right: -12px; background: var(--danger); border-radius: 20px; font-size: 0.6rem; padding: 2px 5px; }
+        .admin-avatar { width: 34px; height: 34px; background: rgba(0,255,170,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1.5px solid var(--neon); cursor: pointer; }
+        .sync-status { display: flex; align-items: center; gap: 5px; font-size: 0.65rem; }
+        .sync-dot { width: 7px; height: 7px; background: var(--success); border-radius: 50%; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+        .stat-card { background: var(--bg-card); backdrop-filter: blur(12px); border-radius: 18px; padding: 14px; border: var(--border-glow); transition: all 0.3s; text-align: center; }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: var(--neon-glow); }
+        .stat-card i { font-size: 1.6rem; color: var(--neon); margin-bottom: 6px; }
+        .stat-card h3 { font-size: 1.5rem; color: white; }
+        .stat-card p { color: var(--text-secondary); font-size: 0.7rem; }
+        .charts-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 20px; }
+        .chart-card { background: var(--bg-card); border-radius: 18px; padding: 14px; border: var(--border-glow); }
+        .chart-card h4 { font-size: 0.85rem; margin-bottom: 10px; color: var(--neon); }
+        .section-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px; }
+        .admin-card { background: rgba(0, 255, 170, 0.08); backdrop-filter: blur(8px); border-radius: 16px; padding: 12px 6px; text-align: center; cursor: pointer; transition: all 0.2s; border: var(--border-glow); color: var(--text-primary); font-weight: 500; font-size: 0.7rem; }
+        .admin-card i { font-size: 1.5rem; margin-bottom: 5px; color: var(--neon); display: block; }
+        .admin-card:hover { background: rgba(0, 255, 170, 0.2); transform: translateY(-2px); }
+        .pending-alert { background: rgba(255, 165, 2, 0.12); border: 1px solid var(--warning); border-radius: 16px; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+        .bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: rgba(8, 18, 28, 0.95); backdrop-filter: blur(20px); justify-content: space-around; padding: 6px; z-index: 200; border-top: var(--border-glow); }
+        .bottom-nav.show-bottom-nav { display: flex; }
+        .bottom-nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; padding: 5px 8px; border-radius: 20px; }
+        .bottom-nav-item i { font-size: 1.1rem; color: var(--text-secondary); }
+        .bottom-nav-item span { font-size: 0.55rem; color: var(--text-secondary); }
+        .bottom-nav-item.active i, .bottom-nav-item.active span { color: var(--neon); }
+        .fab { position: fixed; bottom: 65px; right: 16px; background: linear-gradient(135deg, var(--neon), #00cc88); width: 48px; height: 48px; border-radius: 50%; display: none; align-items: center; justify-content: center; box-shadow: 0 0 15px var(--neon); cursor: pointer; z-index: 300; }
+        .fab.show-fab { display: flex; }
+        .fab i { font-size: 1.3rem; color: #0a2a1a; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 1000; padding: 15px; overflow-y: auto; }
+        .modal-content { background: rgba(10, 25, 20, 0.98); backdrop-filter: blur(20px); border-radius: 22px; width: 100%; max-width: 600px; margin: 20px auto; padding: 18px; border: 1px solid var(--neon); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,255,170,0.3); padding-bottom: 10px; margin-bottom: 15px; }
+        .close-modal { background: none; border: none; font-size: 22px; color: white; cursor: pointer; padding: 0 6px; }
+        .form-group { margin-bottom: 12px; }
+        label { display: block; font-weight: 500; margin-bottom: 4px; font-size: 0.75rem; color: var(--neon); }
+        input, select, textarea { background: rgba(255,255,255,0.08); border: 1.5px solid rgba(0,255,170,0.3); border-radius: 14px; padding: 8px 12px; color: white; font-size: 13px; outline: none; width: 100%; }
+        button { background: linear-gradient(135deg, var(--neon), #00cc88); border: none; padding: 10px; border-radius: 25px; font-weight: 600; font-size: 13px; color: #0a2a1a; cursor: pointer; width: 100%; margin-bottom: 6px; }
+        .btn-small { width: auto; padding: 5px 12px; display: inline-block; margin: 0; }
+        .btn-danger { background: linear-gradient(135deg, var(--danger), #cc2e3b); color: white; }
+        .btn-warning { background: linear-gradient(135deg, var(--warning), #cc8400); color: white; }
+        .flex-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .flex-row button { flex: 1; }
+        .table-wrapper { overflow-x: auto; margin: 10px 0; border-radius: 12px; max-height: 400px; overflow-y: auto; }
+        .student-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 380px; }
+        .student-table th { background: rgba(0, 255, 157, 0.15); padding: 8px; text-align: left; color: var(--neon); position: sticky; top: 0; }
+        .student-table td { padding: 6px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .grade-cards { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+        .grade-chip { background: rgba(0, 255, 157, 0.2); padding: 6px 14px; border-radius: 25px; cursor: pointer; font-size: 12px; border: 1px solid rgba(0,255,170,0.3); }
+        .grade-chip:active { background: var(--neon); color: #0a2a1a; }
+        .payment-month-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 10px 0; }
+        .month-option { background: rgba(255,255,255,0.08); padding: 8px; text-align: center; border-radius: 12px; cursor: pointer; font-size: 12px; border: 1px solid rgba(0,255,170,0.3); }
+        .month-option.paid { background: var(--success); opacity: 0.6; cursor: not-allowed; }
+        .month-option.selected { background: var(--neon); color: #0a2a1a; border: 2px solid white; }
+        .attendance-btns { display: flex; gap: 5px; }
+        .present-btn, .absent-btn { padding: 4px 8px; border-radius: 18px; font-size: 10px; width: auto; margin: 0; }
+        .present-btn { background: var(--success); color: white; }
+        .absent-btn { background: var(--danger); color: white; }
+        .skill-input { width: 55px; padding: 5px; font-size: 11px; }
+        .mark-input { width: 65px; padding: 5px; font-size: 12px; }
+        .login-container { max-width: 340px; margin: 50px auto; }
+        .login-header { text-align: center; margin-bottom: 18px; }
+        .login-header i { font-size: 2.8rem; color: var(--neon); background: rgba(0,255,170,0.15); padding: 14px; border-radius: 50%; }
+        .toast-msg { position: fixed; bottom: 70px; left: 15px; right: 15px; background: #1a3a2a; padding: 10px; border-radius: 25px; z-index: 2100; text-align: center; border-left: 4px solid var(--neon); font-size: 12px; }
+        .loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 3000; display: none; justify-content: center; align-items: center; flex-direction: column; }
+        .spinner { width: 35px; height: 35px; border: 3px solid rgba(0,255,170,0.2); border-top: 3px solid var(--neon); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .filter-result { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 12px; margin-top: 10px; max-height: 300px; overflow-y: auto; }
+        .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
+        .pagination button { width: auto; padding: 5px 12px; margin: 0; }
+        .back-link { position: fixed; bottom: 12px; left: 12px; z-index: 100; }
+        .back-link a { color: white; background: rgba(0,0,0,0.5); padding: 6px 12px; border-radius: 25px; font-size: 11px; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; border: 1px solid rgba(0,255,170,0.3); }
+        .theme-toggle-btn { background: transparent; border: none; color: white; font-size: 1.1rem; cursor: pointer; width: auto; margin: 0; }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); position: fixed; }
+            .sidebar.mobile-open { transform: translateX(0); width: 70%; }
+            .main-content { margin-left: 0 !important; padding: 12px; padding-bottom: 60px; }
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .charts-row { grid-template-columns: 1fr; gap: 12px; }
+            .section-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .payment-month-grid { grid-template-columns: repeat(3, 1fr); }
+            .top-navbar { flex-direction: column; align-items: stretch; }
+            .search-global { width: 100%; }
+            .nav-icons { justify-content: flex-end; }
+        }
+        @media (max-width: 480px) {
+            .stat-card h3 { font-size: 1.2rem; }
+            .stat-card i { font-size: 1.3rem; }
+            .admin-card i { font-size: 1.2rem; }
+            .admin-card span { font-size: 0.6rem; }
+        }
+        @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+    </style>
+</head>
+<body>
+    <canvas id="particle-canvas"></canvas>
+    <div class="sidebar" id="sidebar">
+        <div class="logo-area"><i class="fas fa-brain logo-icon"></i><span class="logo-text">SkillNexus</span></div>
+        <div class="sidebar-nav">
+            <div class="sidebar-link active" data-nav="dashboard"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></div>
+            <div class="sidebar-link" data-nav="students"><i class="fas fa-users"></i><span>Students</span></div>
+            <div class="sidebar-link" data-nav="attendance"><i class="fas fa-calendar-check"></i><span>Attendance</span></div>
+            <div class="sidebar-link" data-nav="exams"><i class="fas fa-chart-line"></i><span>Exams</span></div>
+            <div class="sidebar-link" data-nav="skills"><i class="fas fa-language"></i><span>Skills</span></div>
+            <div class="sidebar-link" data-nav="payments"><i class="fas fa-coins"></i><span>Payments</span></div>
+            <div class="sidebar-link" data-nav="reports"><i class="fas fa-database"></i><span>Reports</span></div>
+            <div class="sidebar-link" data-nav="announce"><i class="fab fa-whatsapp"></i><span>WhatsApp</span></div>
+            <div class="sidebar-link" data-nav="settings"><i class="fas fa-cog"></i><span>Settings</span></div>
+        </div>
+        <div class="sync-status"><span class="sync-dot"></span><span>Google Sheets Live</span></div>
+    </div>
+    <div class="main-content">
+        <div class="top-navbar" id="topNavbar">
+            <div class="search-global"><i class="fas fa-search"></i><input type="text" id="globalSearch" placeholder="Search student... (Ctrl+K)"></div>
+            <div class="nav-icons">
+                <div class="icon-badge" id="notificationBell"><i class="far fa-bell"></i><span class="badge-count" id="notifBadge">0</span></div>
+                <div class="sync-status"><span class="sync-dot"></span><span>Synced</span></div>
+                <button id="quickAddBtn" class="btn-small" style="background:#00ffaa20; color:#00ffaa;"><i class="fas fa-plus"></i> Add</button>
+                <button class="theme-toggle-btn" id="themeToggleBtn"><i class="fas fa-moon"></i></button>
+                <div class="admin-avatar"><i class="fas fa-user-cog"></i></div>
+                <button id="toggleSidebarBtn" style="background:transparent; border:none; color:white;"><i class="fas fa-bars"></i></button>
+            </div>
+        </div>
+        <div id="adminLoginPanel" style="display: block;">
+            <div class="login-container">
+                <div class="glass-panel" style="background: var(--bg-card); border-radius: 22px; padding: 22px; text-align: center;">
+                    <div class="login-header"><i class="fas fa-user-shield"></i><h2 style="color: var(--neon); margin-top: 6px;">Admin Portal</h2><p style="color: var(--text-secondary); font-size: 0.75rem;">SkillNexus Management</p></div>
+                    <div class="form-group"><label>Username</label><input type="text" id="adminUser" placeholder="Enter username"></div>
+                    <div class="form-group"><label>Password</label><input type="password" id="adminPass" placeholder="Enter password"></div>
+                    <button id="adminLoginBtn"><i class="fas fa-sign-in-alt"></i> Access Dashboard</button>
+                    <div id="adminLoginMsg" style="margin-top: 10px; text-align: center; color: #ff6b6b; font-size: 0.7rem;"></div>
+                </div>
+            </div>
+        </div>
+        <div id="adminDashboard" style="display: none;">
+            <h1 style="font-size: 1.3rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;"><i class="fas fa-chalkboard-user" style="color: var(--neon);"></i> Nexus Admin Console</h1>
+            <div class="kpi-grid">
+                <div class="stat-card"><i class="fas fa-users"></i><h3 id="totalStudents">0</h3><p>Total Students</p></div>
+                <div class="stat-card"><i class="fas fa-coins"></i><h3 id="monthlyIncome">Rs.0</h3><p>Monthly Income</p></div>
+                <div class="stat-card"><i class="fas fa-exclamation-triangle"></i><h3 id="pendingPayments">0</h3><p>Pending Payments</p></div>
+                <div class="stat-card"><i class="fas fa-chart-line"></i><h3 id="avgAttendance">0%</h3><p>Avg Attendance</p></div>
+            </div>
+            <div class="charts-row">
+                <div class="chart-card"><h4><i class="fas fa-chart-line"></i> Attendance Trend</h4><canvas id="attendanceChart" height="90"></canvas></div>
+                <div class="chart-card"><h4><i class="fas fa-chart-bar"></i> Payment Analytics</h4><canvas id="paymentChart" height="90"></canvas></div>
+            </div>
+            <div class="pending-alert"><span><i class="fas fa-clock"></i> Pending Approvals: <strong id="pendingCount">0</strong></span><button id="viewPendingBtn" class="btn-small btn-warning"><i class="fas fa-check-circle"></i> Review</button></div>
+            <div class="section-grid">
+                <div class="admin-card" data-section="register"><i class="fas fa-user-plus"></i><span>Register</span></div>
+                <div class="admin-card" data-section="update"><i class="fas fa-edit"></i><span>Update</span></div>
+                <div class="admin-card" data-section="attend"><i class="fas fa-calendar-check"></i><span>Attendance</span></div>
+                <div class="admin-card" data-section="exam"><i class="fas fa-chart-line"></i><span>Exam Marks</span></div>
+                <div class="admin-card" data-section="skill"><i class="fas fa-language"></i><span>Skills</span></div>
+                <div class="admin-card" data-section="payment"><i class="fas fa-coins"></i><span>Payments</span></div>
+                <div class="admin-card" data-section="filter"><i class="fas fa-filter"></i><span>ID Filter</span></div>
+                <div class="admin-card" data-section="datafilter"><i class="fas fa-database"></i><span>Data Viewer</span></div>
+                <div class="admin-card" data-section="promote"><i class="fas fa-arrow-up"></i><span>Promote</span></div>
+                <div class="admin-card" data-section="whatsapp"><i class="fab fa-whatsapp"></i><span>WhatsApp</span></div>
+            </div>
+        </div>
+    </div>
+    <div class="bottom-nav" id="bottomNav">
+        <div class="bottom-nav-item active" data-nav="dashboard"><i class="fas fa-home"></i><span>Home</span></div>
+        <div class="bottom-nav-item" data-nav="students"><i class="fas fa-users"></i><span>Students</span></div>
+        <div class="bottom-nav-item" data-nav="attendance"><i class="fas fa-calendar-check"></i><span>Attendance</span></div>
+        <div class="bottom-nav-item" data-nav="payments"><i class="fas fa-coins"></i><span>Payments</span></div>
+        <div class="bottom-nav-item" data-nav="reports"><i class="fas fa-database"></i><span>Data</span></div>
+    </div>
+    <div class="fab" id="fab"><i class="fas fa-plus"></i></div>
+    <div id="dynamicModal" class="modal"><div id="modalInner"></div></div>
+    <div class="loader-overlay" id="loadingOverlay"><div class="spinner"></div><div>Processing...</div></div>
+    <div class="back-link"><a href="index.html"><i class="fas fa-arrow-left"></i> Back</a></div>
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx8rZB8_rO2YNB6wXon6Mcb55iN-XxowGiNFv4Pej5pul5xyXEssySql4-wbsu3aSNs/exec";
+        const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        let attendanceChart, paymentChart;
+        
+        function showLoader(show){ document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none'; }
+        function showToast(msg, isError){ let t=document.createElement('div'); t.className='toast-msg'; t.style.background=isError?'#ff4757':'#2ed573'; t.innerHTML=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),3000); }
+        
+        function addOneDay(dateStr){
+            if(!dateStr) return '';
+            let clean = String(dateStr).split('T')[0];
+            if(clean.match(/^\d{4}-\d{2}-\d{2}$/)){
+                let parts = clean.split('-');
+                let date = new Date(Date.UTC(parts[0], parts[1]-1, parts[2]));
+                date.setUTCDate(date.getUTCDate() + 1);
+                return `${date.getUTCFullYear()}-${String(date.getUTCMonth()+1).padStart(2,'0')}-${String(date.getUTCDate()).padStart(2,'0')}`;
+            }
+            return clean;
+        }
+        
+        function processDataDates(data){
+            if(!data) return data;
+            if(Array.isArray(data)) return data.map(item => processDataDates(item));
+            if(typeof data === 'object' && data !== null){
+                let newObj = {};
+                for(let key in data){
+                    let val = data[key];
+                    if(val && typeof val === 'string' && (key.toLowerCase().includes('date') || key === 'Birth')){
+                        newObj[key] = addOneDay(val);
+                    } else if(val && typeof val === 'object'){
+                        newObj[key] = processDataDates(val);
+                    } else {
+                        newObj[key] = val;
+                    }
+                }
+                return newObj;
+            }
+            return data;
+        }
+        
+        async function apiCall(action, method='GET', payload={}){
+            try{
+                let url=new URL(SCRIPT_URL);
+                if(method==='GET'){
+                    url.searchParams.append('action',action);
+                    Object.entries(payload).forEach(([k,v])=>v!==undefined && url.searchParams.append(k,v));
+                    let r=await fetch(url);
+                    let result=await r.json();
+                    if(result.success && result.data) result.data = processDataDates(result.data);
+                    return result;
+                } else{
+                    let f=new URLSearchParams();
+                    f.append('action',action);
+                    f.append('data',JSON.stringify(payload));
+                    let r=await fetch(SCRIPT_URL,{method:'POST',body:f});
+                    let result=await r.json();
+                    if(result.success && result.data) result.data = processDataDates(result.data);
+                    return result;
+                }
+            } catch(e){ return { error:true, message:e.message }; }
+        }
+        
+        function closeModal(){ document.getElementById('dynamicModal').style.display='none'; }
+        function openModal(html){ document.getElementById('modalInner').innerHTML=html; document.getElementById('dynamicModal').style.display='block'; }
+        document.getElementById('dynamicModal')?.addEventListener('click',function(e){ if(e.target===this) closeModal(); });
+        
+        async function getNextId(){ let r=await apiCall('getAllStudents','GET'); if(r.success){ let max=0; r.data.forEach(s=>{ let n=parseInt(s.id?.substring(1)); if(n>max) max=n;}); return 'S'+String(max+1).padStart(3,'0'); } return 'S001'; }
+        
+        async function showRegisterModal(){
+            let nextId=await getNextId();
+            let html=`<div class="modal-content"><div class="modal-header"><h2><i class="fas fa-user-plus"></i> Register Student</h2><button class="close-modal" onclick="closeModal()">&times;</button></div><form id="regForm"><div class="form-group"><label>Student ID</label><input name="id" value="${nextId}" readonly></div><div class="form-group"><label>Email</label><input name="email" type="email" required></div><div class="form-group"><label>Full Name</label><input name="name" required></div><div class="form-group"><label>Grade</label><select name="grade">${Array.from({length:13},(_,i)=>`<option value="${i+1}">Grade ${i+1}</option>`).join('')}</select></div><div class="form-group"><label>Phone</label><input name="phone" required></div><div class="form-group"><label>Gender</label><select name="gender"><option>Male</option><option>Female</option></select></div><div class="form-group"><label>Birth Date</label><input name="birth" type="date"></div><div class="form-group"><label>Address</label><input name="address"></div><div class="form-group"><label>Parent Info</label><input name="parentInf"></div><div class="flex-row"><button type="submit">Register</button><button type="button" class="btn-danger" onclick="closeModal()">Cancel</button></div></form></div>`;
+            openModal(html);
+            document.getElementById('regForm').onsubmit=async function(e){
+                e.preventDefault(); let fd=new FormData(e.target); let data={}; fd.forEach((v,k)=>data[k]=v);
+                showLoader(true); let r=await apiCall('registerStudent','POST',data); showLoader(false);
+                if(r.success){ showToast('Registered!'); alert(`Student Registered!\nID: ${r.id}\nPassword: ${r.password}`); closeModal(); loadDashboardStats(); }
+                else showToast(r.message,true);
+            };
+        }
+        
+        function showUpdateModal(){
+            let html=`<div class="modal-content"><div class="modal-header"><h2><i class="fas fa-edit"></i> Update Student</h2><button class="close-modal" onclick="closeModal()">&times;</button></div><div class="form-group"><label>Student ID</label><input id="updateId" placeholder="S001"></div><button id="fetchStudentBtn">Fetch</button><div id="updateFormContainer"></div></div>`;
+            openModal(html);
+            document.getElementById('fetchStudentBtn').onclick=async function(){
+                let id=document.getElementById('updateId').value.trim();
+                if(!id){ showToast('Enter ID',true); return; }
+                showLoader(true); let r=await apiCall('getStudentData','GET',{id}); showLoader(false);
+                if(r.success){
+                    let s=r.data;
+                    let formHtml=`<form id="updateForm"><input name="id" value="${s.id}" readonly><div class="form-group"><label>Name</label><input name="name" value="${s.name}"></div><div class="form-group"><label>Grade</label><select name="grade">${Array.from({length:13},(_,i)=>`<option ${s.grade==i+1?'selected':''}>${i+1}</option>`).join('')}</select></div><div class="form-group"><label>Phone</label><input name="phone" value="${s.phone}"></div><div class="form-group"><label>Email</label><input name="email" value="${s.email}"></div><div class="form-group"><label>Gender</label><select name="gender"><option ${s.gender=='Male'?'selected':''}>Male</option><option ${s.gender=='Female'?'selected':''}>Female</option></select></div><div class="form-group"><label>Birth</label><input name="birth" type="date" value="${s.birth||''}"></div><div class="form-group"><label>Address</label><input name="address" value="${s.address}"></div><div class="form-group"><label>Parent Info</label><input name="parentInf" value="${s.parentInf}"></div><div class="flex-row"><button type="submit">Update</button><button type="button" id="deleteBtn" class="btn-danger">Delete</button></div></form>`;
+                    document.getElementById('updateFormContainer').innerHTML=formHtml;
+                    document.getElementById('updateForm').onsubmit=async function(ev){
+                        ev.preventDefault(); let fd=new FormData(ev.target); let data={}; fd.forEach((v,k)=>data[k]=v);
+                        showLoader(true); await apiCall('updateStudent','POST',data); showLoader(false);
+                        showToast('Updated'); closeModal(); loadDashboardStats();
+                    };
+                    document.getElementById('deleteBtn').onclick=async function(){
+                        if(confirm('Delete?')){ showLoader(true); await apiCall('deleteStudent','POST',{id}); showLoader(false); showToast('Deleted'); closeModal(); loadDashboardStats(); }
+                    };
+                } else showToast('Not found',true);
+            };
+        }
+        
+        function showAttendanceGradeSelect(){
+            let grades=[1,2,3,4,5,6,7,8,9,10,11,12,13];
+            let chips=grades.map(g=>`<div class="grade-chip" data-grade="${g}">Grade ${g}</div>`).join('');
+            let html=`<div class="modal-content"><div class="modal-header"><h2>Attendance</h2><button class="close-modal" onclick="closeModal()">&times;</button></div><div class="grade-cards">${chips}</div><div id="attendanceArea"></div></div>`;
+            openModal(html);
+            document.querySelectorAll('.grade-chip').forEach(chip=>chip.addEventListener('click',()=>showAttendanceUI(chip.dataset.grade)));
+        }
+        
+        async function showAttendanceUI(grade){
+            let d=new Date(), today=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+            let check=await apiCall('checkAttendanceToday','GET',{grade,date:today});
+            if(check.exists){ showToast(`Already marked`,true); return; }
+            let students=await apiCall('getAllStudentsByGrade','GET',{grade});
+            if(!students.success||!students.data.length){ document.getElementById('attendanceArea').innerHTML='<p>No students</p>'; return; }
+            let rows=students.data.map(s=>`<tr><td>${s.id}</td><td>${s.name}侧<td><div class="attendance-btns"><button class="present-btn" data-id="${s.id}">P</button><button class="absent-btn" data-id="${s.id}">A</button></div>侧</tr>`).join('');
+            let html=`<h3>Grade ${grade} - ${today}</h3><div class="table-wrapper"><table class="student-table"><thead><tr><th>ID</th><th>Name</th><th>Mark</th></tr></thead><tbody>${rows}</tbody></table></div><button id="saveAttendBtn">Save</button>`;
+            document.getElementById('attendanceArea').innerHTML=html;
+            let records={};
+            document.querySelectorAll('.present-btn').forEach(btn=>btn.addEventListener('click',function(){ records[this.dataset.id]='Present'; }));
+            document.querySelectorAll('.absent-btn').forEach(btn=>btn.addEventListener('click',function(){ records[this.dataset.id]='Absent'; }));
+            document.getElementById('saveAttendBtn').onclick=async function(){
+                let recs=Object.entries(records).map(([id,status])=>({id,status}));
+                if(!recs.length){ showToast('Mark at least one',true); return; }
+                showLoader(true); let r=await apiCall('saveAttendance','POST',{grade,date:today,records:recs}); showLoader(false);
+                if(r.success){ showToast('Saved'); closeModal(); } else showToast(r.message,true);
+            };
+        }
+        
+        function showExamGradeSelect(){
+            let grades=[1,2,3,4,5,6,7,8,9,10,11,12,13];
+            let chips=grades.map(g=>`<div class="grade-chip" data-grade="${g}">Grade ${g}</div>`).join('');
+            let html=`<div class="modal-content"><div class="modal-header"><h2>Exam Marks</h2><button class="close-modal" onclick="closeModal()">&times;</button></div><div class="grade-cards">${chips}</div><div id="examArea"></div></div>`;
+            openModal(html);
+            document.querySelectorAll('.grade-chip').forEach(chip=>chip.addEventListener('click',()=>showExamUI(chip.dataset.grade)));
+        }
+        
+        async function showExamUI(grade){
+            let students=await apiCall('getAllStudentsByGrade','GET',{grade});
+            if(!students.success||!students.data.length){ document.getElementById('examArea').innerHTML='<p>No students</p>'; return; }
+            let today=new Date().toISOString().slice(0,10);
+            let rows=students.data.map(s=>`</td><td>${s.id}侧<td>${s.name}侧<td><input class="mark-input" data-id="${s.id}" placeholder="0-100" style="width:65px;">侧</tr>`).join('');
+            let html=`<div><label>Date</label><input id="examDate" value="${today}"></div><div class="table-wrapper"><table class="student-table"><thead><tr><th>ID</th><th>Name</th><th>Mark</th></tr></thead><tbody>${rows}</tbody></table></div><button id="saveExamBtn">Save</button>`;
+            document.getElementById('examArea').innerHTML=html;
+            document.getElementById('saveExamBtn').onclick=async function(){
+                let date=document.getElementById('examDate').value;
+                let marks=[]; document.querySelectorAll('.mark-input').forEach(inp=>{ if(inp.value) marks.push({id:inp.dataset.id,mark:parseInt(inp.value)}); });
+                if(!marks.length){ showToast('No marks',true); return; }
+                showLoader(true); let r=await apiCall('saveExamMarks','POST',{grade,date,marks}); showLoader(false);
+                if(r.success){ showToast('Saved'); closeModal(); } else showToast(r.message,true);
+            };
+        }
+        
+        function showSkillGradeSelect(){
+            let grades=[1,2,3,4,5,6,7,8,9,10,11,12,13];
+            let chips=grades.map(g=>`<div class="grade-chip" data-grade="${g}">Grade ${g}</div>`).join('');
+            let html=`<div class="modal-content"><div class="modal-header"><h2>Skills</h2><button class="close-modal" onclick="closeModal()">&times;</button></div><div class="grade-cards">${chips}</div><div id="skillArea"></div></div>`;
+            openModal(html);
+            document.querySelectorAll('.grade-chip').forEach(chip=>chip.addEventListener('click',()=>showSkillUI(chip.dataset.grade)));
+        }
+        
+        async function showSkillUI(grade){
+            let students=await apiCall('getAllStudentsByGrade','GET',{grade});
+            if(!students.success||!students.data.length){ document.getElementById('skillArea').innerHTML='<p>No students</p>'; return; }
+            let rows=students.data.map(s=>`<tr><td>${s.id}侧<td>${s.name}侧<td><div style="display:flex; gap:4px; flex-wrap:wrap;"><input class="skill-grammar" data-id="${s.id}" placeholder="Gram" style="width:55px;"><input class="skill-writing" data-id="${s.id}" placeholder="Writ" style="width:55px;"><input class="skill-reading" data-id="${s.id}" placeholder="Read" style="width:55px;"><input class="skill-spoken" data-id="${s.id}" placeholder="Spok" style="width:55px;"></div>侧<td><button class="save-skill-btn btn-small" data-id="${s.id}">Save</button>侧</tr>`).join('');
+            let html=`<div class="table-wrapper"><table class="student-table"><thead><tr><th>ID</th><th>Name</th><th>Grammar / Writing / Reading / Spoken</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+            document.getElementById('skillArea').innerHTML=html;
+            document.querySelectorAll('.save-skill-btn').forEach(btn=>btn.addEventListener('click',async function(){
+                let id=this.dataset.id;
+                let grammar=document.querySelector(`.skill-grammar[data-id="${id}"]`).value||0;
+                let writing=document.querySelector(`.skill-writing[data-id="${id}"]`).value||0;
+                let reading=document.querySelector(`.skill-reading[data-id="${id}"]`).value||0;
+                let spoken=document.querySelector(`.skill-spoken[data-id="${id}"]`).value||0;
+                showLoader(true); await apiCall('saveSkill','POST',{id,grammar,writing,reading,spoken}); showLoader(false);
+                showToast(`Saved!`);
+            }));
+        }
+        
+        function showPaymentGradeSelect(){
+            let grades=[1,2,3,4,5,6,7,8,9,10,11,12,13];
+            let chips=grades.map(g=>`<div class="grade-chip" data-grade="${g}">Grade ${g}</div>`).join('');
+            let html=`<div class="modal-content"><div class="modal-header"><h2>Payments</h2><button class="close-modal" onclick="closeModal()">&times;</button></div><div class="grade-cards">${chips}</div><div id="paymentArea"></div></div>`;
+            openModal(html);
+            document.querySelectorAll('.grade-chip').forEach(chip=>chip.addEventListener('click',()=>showPaymentUI(chip.dataset.grade)));
+        }
+        
+        async function showPaymentUI(grade){
+            let students=await apiCall('getAllStudentsByGrade','GET',{grade});
+            if(!students.success||!students.data.length){ document.getElementById('paymentArea').innerHTML='<p>No students</p>'; return; }
+            let rows=students.data.map(s=>`<tr><td>${s.id}侧<td>${s.name}侧<td><button class="mark-payment-btn btn-small" data-id="${s.id}">Pay</button>侧</tr>`).join('');
+            document.getElementById('paymentArea').innerHTML=`<div class="table-wrapper"><table class="student-table"><thead><tr><th>ID</th><th>Name</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+            document.querySelectorAll('.mark-payment-btn').forEach(btn=>btn.addEventListener('click',async function(){
+                let id=this.dataset.id;
+                let payments=await apiCall('getPayments','GET',{id});
+                let paidMonths=payments.success?payments.data.map(p=>p.month):[];
+                let year=new Date().getFullYear();
+                let monthGrid=months.map(m=>`<div class="month-option ${paidMonths.includes(m)?'paid':''}" data-month="${m}">${m}</div>`).join('');
+                let modalHtml=`<div class="modal-content"><h3>Select Month for ${year}</h3><div class="payment-month-grid">${monthGrid}</div><button id="confirmPaymentBtn">Confirm</button></div>`;
+                openModal(modalHtml);
+                let selected=null;
+                document.querySelectorAll('.month-option:not(.paid)').forEach(opt=>opt.addEventListener('click',function(){ selected=this.dataset.month; document.getElementById('confirmPaymentBtn').disabled=false; this.classList.add('selected'); }));
+                document.getElementById('confirmPaymentBtn').onclick=async function(){
+                    if(selected){ showLoader(true); await apiCall('savePayment','POST',{id,month:selected,year}); showLoader(false); showToast(`Payment recorded for ${selected}`); closeModal(); loadDashboardStats(); }
+                };
+            }));
+        }
+        
+        let currentFilterData = [], currentPage = 1, rowsPerPage = 10;
+        
+        function showFilterModal(){
+            let html=`<div class="modal-content" style="max-width:800px;"><div class="modal-header"><h2>Student ID Filter</h2><button class="close-modal" onclick="closeModal()">&times;</button></div><div class="form-group"><label>Student ID</label><input type="text" id="filterId" placeholder="S001"></div><div class="form-group"><label>Select Sheet</label><select id="filterSheet"><option>Registration</option><option>Attendance</option><option>ExamMarks</option><option>Skills</option><option>Payments</option></select></div><button id="runFilterBtn">Search</button><div id="filterResult" style="margin-top:15px;"></div><div class="pagination" id="paginationControls" style="display:none;"><button id="prevPageBtn">Previous</button><span id="pageInfo" style="margin:0 10px;">Page 1</span><button id="nextPageBtn">Next</button></div></div>`;
+            openModal(html);
+            document.getElementById('runFilterBtn').onclick=async function(){
+                let id=document.getElementById('filterId').value.trim();
+                let sheet=document.getElementById('filterSheet').value;
+                if(!id){ showToast('Enter Student ID',true); return; }
+                showLoader(true);
+                let r=await apiCall('getStudentByFilter','POST',{id,sheetName:sheet});
+                showLoader(false);
+                if(r.success){
+                    currentFilterData = r.data;
+                    currentPage = 1;
+                    displayFilterData();
+                    document.getElementById('paginationControls').style.display = 'flex';
+                } else { showToast(r.message,true); document.getElementById('filterResult').innerHTML=`<p>No records found</p>`; document.getElementById('paginationControls').style.display = 'none'; }
+            };
+            function displayFilterData(){
+                if(!currentFilterData || currentFilterData.length === 0){ document.getElementById('filterResult').innerHTML='<p>No records</p>'; return; }
+                const start = (currentPage-1)*rowsPerPage;
+                const end = start+rowsPerPage;
+                const pageData = currentFilterData.slice(start,end);
+                const headers = Object.keys(pageData[0]||{});
+                let table = `<div class="table-wrapper"><table class="student-table"><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>`;
+                pageData.forEach(row => { table += `<tr>${headers.map(h=>`<td>${row[h] !== undefined && row[h] !== null ? row[h] : '-'}侧`).join('')}</tr>`; });
+                table += `</tbody></table></div>`;
+                document.getElementById('filterResult').innerHTML = table;
+                document.getElementById('pageInfo').innerText = `Page ${currentPage} of ${Math.ceil(currentFilterData.length/rowsPerPage)}`;
+            }
+            document.getElementById('prevPageBtn')?.addEventListener('click',()=>{ if(currentPage>1){ currentPage--; displayFilterData(); } });
+            document.getElementById('nextPageBtn')?.addEventListener('click',()=>{ if(currentPage<Math.ceil(currentFilterData.length/rowsPerPage)){ currentPage++; displayFilterData(); } });
+        }
+        
+        async function showDataFilterUI(){
+            let grades=[1,2,3,4,5,6,7,8,9,10,11,12,13];
+            let sheets=['Registration','Attendance','ExamMarks','Skills','Payments'];
+            let html=`<div class="modal-content" style="max-width:95%;"><div class="modal-header"><h2>Grade Wise Data Viewer</h2><button class="close-modal" onclick="closeModal()">&times;</button></div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;"><div class="form-group"><label>Grade</label><select id="filterGrade"><option value="">Select</option>${grades.map(g=>`<option value="${g}">Grade ${g}</option>`).join('')}</select></div>
+            <div class="form-group"><label>Sheet</label><select id="filterSheet"><option value="">Select</option>${sheets.map(s=>`<option value="${s}">${s}</option>`).join('')}</select></div></div>
+            <div id="dateFilterDiv" style="display:none;"><div class="form-group"><label>Date</label><select id="filterDate"><option value="">All Dates</option></select></div></div>
+            <div id="monthFilterDiv" style="display:none;"><div class="form-group"><label>Month</label><select id="filterMonth"><option value="">All Months</option>${months.map(m=>`<option value="${m}">${m}</option>`).join('')}</select></div></div>
+            <div class="flex-row"><button id="filterLoadBtn">Load</button><button id="filterExportBtn" class="export-btn" style="display:none;">Export CSV</button></div>
+            <div id="filterResult" style="margin-top:12px; max-height:350px; overflow:auto;"></div></div>`;
+            openModal(html);
+            let currentData=[];
+            document.getElementById('filterSheet').onchange=async function(){
+                let sheet=this.value, grade=document.getElementById('filterGrade').value;
+                document.getElementById('dateFilterDiv').style.display=(sheet==='Attendance'||sheet==='ExamMarks')?'block':'none';
+                document.getElementById('monthFilterDiv').style.display=(sheet==='Payments')?'block':'none';
+                if(sheet && grade && (sheet==='Attendance'||sheet==='ExamMarks')){
+                    showLoader(true);
+                    let r=await apiCall('getDistinctDatesForSheet','GET',{sheetName:sheet,grade:grade});
+                    showLoader(false);
+                    if(r.success && r.data){
+                        let dateSelect=document.getElementById('filterDate');
+                        dateSelect.innerHTML='<option value="">All Dates</option>'+r.data.map(d=>`<option value="${d}">${addOneDay(d)}</option>`).join('');
+                    }
+                }
+            };
+            document.getElementById('filterGrade').onchange=function(){ let sheet=document.getElementById('filterSheet').value; if(sheet) document.getElementById('filterSheet').dispatchEvent(new Event('change')); };
+            document.getElementById('filterLoadBtn').onclick=async function(){
+                let grade=document.getElementById('filterGrade').value, sheet=document.getElementById('filterSheet').value;
+                if(!grade||!sheet){ showToast('Select Grade and Sheet',true); return; }
+                let dateFilter=document.getElementById('filterDate')?.value||null;
+                let monthFilter=document.getElementById('filterMonth')?.value||null;
+                showLoader(true);
+                let r=await apiCall('getFilteredDataByGrade','POST',{sheetName:sheet,grade:grade,dateFilter:dateFilter,monthFilter:monthFilter});
+                showLoader(false);
+                if(r.success && r.data){ currentData=r.data; displayDataTable(currentData); document.getElementById('filterExportBtn').style.display='inline-flex'; }
+                else showToast(r.message||'No data',true);
+            };
+            document.getElementById('filterExportBtn').onclick=function(){
+                if(!currentData.length){ showToast('No data',true); return; }
+                let csv=convertToCSV(currentData);
+                downloadCSV(csv,`${document.getElementById('filterSheet').value}_Grade${document.getElementById('filterGrade').value}.csv`);
+                showToast('Exported!');
+            };
+        }
+        
+        function displayDataTable(data){
+            if(!data||data.length===0){ document.getElementById('filterResult').innerHTML='<p>No records</p>'; return; }
+            let headers=Object.keys(data[0]);
+            let table=`<div class="table-wrapper"><table class="student-table"><thead><td>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${data.map(row=>`<tr>${headers.map(h=>`<td>${row[h]||'-'}侧`).join('')}</tr>`).join('')}</tbody></table></div>`;
+            document.getElementById('filterResult').innerHTML=table;
+        }
+        
+        function openWhatsApp(){ window.open('https://chat.whatsapp.com/D9K8kTiTwrsEJjMraVnASK', '_blank'); }
+        
+        async function promoteAllGrades(){
+            if(confirm('Promote all students?')){ showLoader(true); await apiCall('promoteGrades','POST'); showLoader(false); showToast('Promoted!'); loadDashboardStats(); }
+        }
+        
+        async function showPendingApprovals(){
+            showLoader(true); let r=await apiCall('getPendingRegistrations','GET'); showLoader(false);
+            if(!r.success||!r.data.length){ showToast('No pending'); return; }
+            let rows=r.data.map(p=>`<tr><td>${p.id}侧<td>${p.name}侧}<div style="display:flex;gap:4px;"><button class="approve-btn btn-small" data-id="${p.id}" style="background:#2ed573;">Approve</button><button class="reject-btn btn-small" data-id="${p.id}" style="background:#ff4757;">Reject</button></div>侧</tr>`).join('');
+            let html=`<div class="modal-content"><div class="modal-header"><h2>Pending Approvals</h2><button onclick="closeModal()">&times;</button></div><div class="table-wrapper"><table class="student-table"><thead><tr><th>ID</th><th>Name</th><th>Grade</th><th>Phone</th><th>Action</th></table></thead><tbody>${rows}</tbody></table></div></div>`;
+            openModal(html);
+            document.querySelectorAll('.approve-btn').forEach(btn=>btn.addEventListener('click',async function(){ let id=this.dataset.id; showLoader(true); await apiCall('approveRegistration','POST',{id}); showLoader(false); showToast('Approved'); closeModal(); loadPendingCount(); loadDashboardStats(); }));
+            document.querySelectorAll('.reject-btn').forEach(btn=>btn.addEventListener('click',async function(){ let id=this.dataset.id; showLoader(true); await apiCall('rejectRegistration','POST',{id}); showLoader(false); showToast('Rejected'); closeModal(); loadPendingCount(); }));
+        }
+        
+        async function loadDashboardStats(){
+            try{
+                let students=await apiCall('getAllStudents','GET');
+                if(students.success) document.getElementById('totalStudents').innerText=students.data.length;
+                let payments=await apiCall('getAllPayments','GET');
+                let today=new Date(), currentMonth=today.getMonth()+1, currentYear=today.getFullYear(), monthlyTotal=0;
+                let monthlyPayments = [0,0,0,0,0,0];
+                if(payments.success && payments.data){
+                    payments.data.forEach(p=>{
+                        let pm=null,py=null;
+                        if(p.paymentDate){ let parts=String(p.paymentDate).split('T')[0].split('-'); pm=Number(parts[1]); py=Number(parts[0]); }
+                        if(pm===currentMonth&&py===currentYear) monthlyTotal+=1000;
+                        let monthIdx = months.indexOf(p.month);
+                        if(monthIdx>=0 && monthIdx<6) monthlyPayments[monthIdx] += 1000;
+                    });
+                }
+                document.getElementById('monthlyIncome').innerText='Rs.'+monthlyTotal.toLocaleString();
+                let pendingCount=0;
+                if(students.success){
+                    let monthNames=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                    let currentMonthName=monthNames[currentMonth];
+                    students.data.forEach(s=>{
+                        let hasPaid=payments.success&&payments.data?payments.data.some(p=>p.id===s.id&&p.month===currentMonthName&&Number(p.year)===currentYear):false;
+                        if(!hasPaid) pendingCount++;
+                    });
+                }
+                document.getElementById('pendingPayments').innerText=pendingCount;
+                let attendanceData=await apiCall('getAttendanceData','GET');
+                let totalPresent=0, totalRecords=0;
+                if(attendanceData.success && attendanceData.data){
+                    attendanceData.data.forEach(a=>{ if(a.status==='Present') totalPresent++; totalRecords++; });
+                }
+                let avgAtt = totalRecords>0 ? Math.round((totalPresent/totalRecords)*100) : 87;
+                document.getElementById('avgAttendance').innerText=avgAtt;
+                if(attendanceChart) attendanceChart.destroy();
+                attendanceChart = new Chart(document.getElementById('attendanceChart'),{type:'line',data:{labels:['Week1','Week2','Week3','Week4'],datasets:[{label:'Attendance %',data:[88,92,85,94],borderColor:'#00ffaa',tension:0.3,fill:false}]},options:{responsive:true,maintainAspectRatio:true}});
+                if(paymentChart) paymentChart.destroy();
+                paymentChart = new Chart(document.getElementById('paymentChart'),{type:'bar',data:{labels:['Jan','Feb','Mar','Apr','May','Jun'],datasets:[{label:'Collections (Rs.)',data:monthlyPayments,backgroundColor:'#00ffaa80'}]},options:{responsive:true,maintainAspectRatio:true}});
+            } catch(e){ console.error(e); }
+        }
+        
+        async function loadPendingCount(){ let r=await apiCall('getPendingRegistrations','GET'); if(r.success){ document.getElementById('pendingCount').innerText=r.data.length; document.getElementById('notifBadge').innerText=r.data.length; } }
+        
+        function convertToCSV(data){ if(!data.length) return ''; let headers=Object.keys(data[0]); let rows=data.map(row=>headers.map(h=>`"${String(row[h]||'').replace(/"/g,'""')}"`).join(',')); return [headers.join(','),...rows].join('\n'); }
+        function downloadCSV(csv,filename){ let blob=new Blob(["\uFEFF"+csv],{type:'text/csv'}); let link=document.createElement('a'); link.href=URL.createObjectURL(blob); link.download=filename; link.click(); URL.revokeObjectURL(link.href); }
+        
+        document.querySelectorAll('.admin-card').forEach(card=>{ card.addEventListener('click',function(){
+            let s=this.dataset.section;
+            if(s==='register') showRegisterModal();
+            else if(s==='update') showUpdateModal();
+            else if(s==='attend') showAttendanceGradeSelect();
+            else if(s==='exam') showExamGradeSelect();
+            else if(s==='skill') showSkillGradeSelect();
+            else if(s==='payment') showPaymentGradeSelect();
+            else if(s==='filter') showFilterModal();
+            else if(s==='datafilter') showDataFilterUI();
+            else if(s==='promote') promoteAllGrades();
+            else if(s==='whatsapp') openWhatsApp();
+        }); });
+        
+        document.getElementById('viewPendingBtn')?.addEventListener('click',showPendingApprovals);
+        document.getElementById('fab')?.addEventListener('click',()=>showRegisterModal());
+        document.getElementById('quickAddBtn')?.addEventListener('click',()=>showRegisterModal());
+        document.getElementById('globalSearch')?.addEventListener('keypress',(e)=>{ if(e.key==='Enter') showUpdateModal(); });
+        
+        let loginAttempts=0, MAX_ATTEMPTS=3;
+        if(localStorage.getItem('adminLoginBlocked')==='true'){
+            document.getElementById('adminLoginPanel').innerHTML='<div style="padding:40px;text-align:center;"><i class="fas fa-lock" style="font-size:3rem;"></i><h2>Blocked</h2></div>';
+        }
+        document.getElementById('adminLoginBtn')?.addEventListener('click',function(){
+            let u=document.getElementById('adminUser')?.value.trim();
+            let p=document.getElementById('adminPass')?.value;
+            if((u==='Thuli'||u==='001@U_M_R:ADMIN') && (p==='001@Thuli_$Deshan:T1-M:T'||p==='E001@U_M_R:Admin-M/T')){
+                document.getElementById('adminLoginPanel').style.display='none';
+                document.getElementById('adminDashboard').style.display='block';
+                document.getElementById('topNavbar').classList.add('show-top-navbar');
+                document.getElementById('bottomNav').classList.add('show-bottom-nav');
+                document.getElementById('fab').classList.add('show-fab');
+                loadDashboardStats(); loadPendingCount();
+                showToast('Welcome Admin!');
+            } else {
+                loginAttempts++;
+                if(loginAttempts>=MAX_ATTEMPTS){
+                    localStorage.setItem('adminLoginBlocked','true');
+                    showToast('Device blocked',true);
+                    setTimeout(()=>location.reload(),2000);
+                } else {
+                    document.getElementById('adminLoginMsg').innerHTML=`Invalid! ${MAX_ATTEMPTS-loginAttempts} left`;
+                }
+            }
+        });
+        
+        document.getElementById('themeToggleBtn')?.addEventListener('click',()=>{ document.body.classList.toggle('dark-mode'); let icon=document.querySelector('#themeToggleBtn i'); if(document.body.classList.contains('dark-mode')) icon.className='fas fa-sun'; else icon.className='fas fa-moon'; });
+        document.getElementById('toggleSidebarBtn')?.addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('collapsed'));
+        document.querySelectorAll('.sidebar-link, .bottom-nav-item').forEach(el=>{
+            el.addEventListener('click',function(){
+                let nav=this.dataset.nav;
+                if(nav==='dashboard') location.reload();
+                else if(nav==='students') showUpdateModal();
+                else if(nav==='attendance') showAttendanceGradeSelect();
+                else if(nav==='exams') showExamGradeSelect();
+                else if(nav==='skills') showSkillGradeSelect();
+                else if(nav==='payments') showPaymentGradeSelect();
+                else if(nav==='reports') showDataFilterUI();
+                else if(nav==='announce') openWhatsApp();
+            });
+        });
+        
+        const canvas=document.getElementById('particle-canvas'); const ctx=canvas.getContext('2d'); let particles=[];
+        function resizeCanvas(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
+        window.addEventListener('resize',resizeCanvas); resizeCanvas();
+        for(let i=0;i<60;i++) particles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,radius:Math.random()*2+1,alpha:Math.random()*0.3});
+        function drawParticles(){
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            particles.forEach(p=>{ ctx.beginPath(); ctx.arc(p.x,p.y,p.radius,0,Math.PI*2); ctx.fillStyle=`rgba(0,255,170,${p.alpha})`; ctx.fill(); p.y+=0.2; if(p.y>canvas.height) p.y=0; });
+            requestAnimationFrame(drawParticles);
+        }
+        drawParticles();
+    </script>
+</body>
+</html>

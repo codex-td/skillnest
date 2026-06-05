@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>SkillNest | Admin Console</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        
+        :root {
+            --bg-primary: #f0f4f8;
+            --bg-card: rgba(255, 255, 255, 0.9);
+            --text-primary: #1a2e1a;
+            --text-secondary: #4a5a4a;
+            --accent: #00b894;
+            --accent-dark: #00917c;
+            --border-glow: 1px solid rgba(0, 184, 148, 0.25);
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --sidebar-bg: rgba(255, 255, 255, 0.95);
+            --input-bg: rgba(0, 0, 0, 0.04);
+            --table-header-bg: rgba(0, 184, 148, 0.1);
+            --danger: #ff4757;
+            --warning: #ffa502;
+            --success: #2ed573;
+        }
+        
+        body.dark-mode {
+            --bg-primary: #0a121f;
+            --bg-card: rgba(18, 28, 35, 0.85);
+            --text-primary: #eef5ff;
+            --text-secondary: #8a9bb5;
+            --accent: #00ffaa;
+            --accent-dark: #00cc88;
+            --border-glow: 1px solid rgba(0, 255, 170, 0.25);
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            --sidebar-bg: rgba(8, 18, 28, 0.95);
+            --input-bg: rgba(255, 255, 255, 0.08);
+            --table-header-bg: rgba(0, 255, 170, 0.15);
+        }
+        
+        body { background: var(--bg-primary); color: var(--text-primary); transition: all 0.3s ease; min-height: 100vh; overflow-x: hidden; }
+        #particle-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; opacity: 0.4; }
+        
+        .app-layout { display: flex; min-height: 100vh; position: relative; z-index: 2; }
+        
+        .sidebar {
+            display: none;
+            width: 260px;
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(20px);
+            border-right: var(--border-glow);
+            transition: all 0.3s ease;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            flex-direction: column;
+            padding: 20px 14px;
+        }
+        .sidebar.show-sidebar { display: flex; }
+        .sidebar.collapsed { width: 75px; }
+        .sidebar.collapsed .sidebar-link span, .sidebar.collapsed .logo-text { display: none; }
+        .sidebar.collapsed .sidebar-link i { margin-right: 0; font-size: 1.4rem; }
+        
+        .main-content { flex: 1; margin-left: 0; padding: 15px 20px; transition: margin-left 0.3s; }
+        .sidebar.show-sidebar + .main-content { margin-left: 260px; }
+        .sidebar.show-sidebar.collapsed + .main-content { margin-left: 75px; }
+        
+        .logo-area { display: flex; align-items: center; gap: 10px; padding: 0 10px 20px 10px; border-bottom: 1px solid rgba(0,255,170,0.2); margin-bottom: 20px; }
+        .logo-icon { font-size: 1.8rem; filter: drop-shadow(0 0 8px var(--accent)); }
+        .logo-text { font-weight: 700; font-size: 1.1rem; background: linear-gradient(135deg, var(--text-primary), var(--accent)); background-clip: text; -webkit-background-clip: text; color: transparent; }
+        
+        .sidebar-nav { flex: 1; }
+        .sidebar-link { display: flex; align-items: center; gap: 12px; padding: 10px 14px; margin: 3px 0; border-radius: 12px; color: var(--text-secondary); font-weight: 500; transition: all 0.2s; cursor: pointer; }
+        .sidebar-link i { width: 22px; font-size: 1.1rem; }
+        .sidebar-link.active, .sidebar-link:hover { background: rgba(0, 255, 170, 0.12); color: var(--accent); border-left: 3px solid var(--accent); }
+        
+        .top-navbar { display: none; justify-content: space-between; align-items: center; background: var(--bg-card); backdrop-filter: blur(16px); border-radius: 20px; padding: 8px 16px; margin-bottom: 20px; border: var(--border-glow); flex-wrap: wrap; gap: 10px; box-shadow: var(--shadow); }
+        .top-navbar.show-top-navbar { display: flex; }
+        
+        .search-global { background: var(--input-bg); border-radius: 30px; padding: 7px 14px; flex: 1; min-width: 160px; border: var(--border-glow); display: flex; align-items: center; gap: 8px; }
+        .search-global input { background: transparent; border: none; color: var(--text-primary); outline: none; width: 100%; font-size: 0.85rem; }
+        .search-global input::placeholder { color: var(--text-secondary); }
+        
+        .nav-icons { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .icon-badge { position: relative; cursor: pointer; font-size: 1.1rem; }
+        .badge-count { position: absolute; top: -8px; right: -12px; background: var(--danger); border-radius: 20px; font-size: 0.6rem; padding: 2px 5px; color: white; }
+        .admin-avatar { width: 34px; height: 34px; background: rgba(0,255,170,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1.5px solid var(--accent); cursor: pointer; }
+        .sync-status { display: flex; align-items: center; gap: 5px; font-size: 0.65rem; }
+        .sync-dot { width: 7px; height: 7px; background: var(--success); border-radius: 50%; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+        
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+        .stat-card { background: var(--bg-card); backdrop-filter: blur(12px); border-radius: 18px; padding: 14px; border: var(--border-glow); transition: all 0.3s; text-align: center; box-shadow: var(--shadow); }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 0 15px var(--accent); }
+        .stat-card i { font-size: 1.6rem; margin-bottom: 6px; }
+        .stat-card h3 { font-size: 1.5rem; color: var(--text-primary); }
+        .stat-card p { color: var(--text-secondary); font-size: 0.7rem; }
+        
+        .charts-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 20px; }
+        .chart-card { background: var(--bg-card); border-radius: 18px; padding: 14px; border: var(--border-glow); box-shadow: var(--shadow); }
+        .chart-card h4 { font-size: 0.85rem; margin-bottom: 10px; color: var(--accent); }
+        
+        .section-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 20px; }
+        .admin-card { background: rgba(0, 184, 148, 0.08); backdrop-filter: blur(8px); border-radius: 16px; padding: 12px 6px; text-align: center; cursor: pointer; transition: all 0.2s; border: var(--border-glow); color: var(--text-primary); font-weight: 500; font-size: 0.7rem; }
+        .admin-card i { font-size: 1.5rem; margin-bottom: 5px; color: var(--accent); display: block; }
+        .admin-card:hover { background: rgba(0, 184, 148, 0.2); transform: translateY(-2px); }
+        
+        .pending-alert { background: rgba(255, 165, 2, 0.12); border: 1px solid var(--warning); border-radius: 16px; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+        
+        .bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--sidebar-bg); backdrop-filter: blur(20px); justify-content: space-around; padding: 6px; z-index: 200; border-top: var(--border-glow); }
+        .bottom-nav.show-bottom-nav { display: flex; }
+        .bottom-nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; padding: 5px 8px; border-radius: 20px; }
+        .bottom-nav-item i { font-size: 1.1rem; color: var(--text-secondary); }
+        .bottom-nav-item span { font-size: 0.55rem; color: var(--text-secondary); }
+        .bottom-nav-item.active i, .bottom-nav-item.active span { color: var(--accent); }
+        
+        .fab { position: fixed; bottom: 65px; right: 16px; background: linear-gradient(135deg, var(--accent), var(--accent-dark)); width: 48px; height: 48px; border-radius: 50%; display: none; align-items: center; justify-content: center; box-shadow: 0 0 15px var(--accent); cursor: pointer; z-index: 300; }
+        .fab.show-fab { display: flex; }
+        .fab i { font-size: 1.3rem; color: #0a2a1a; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 1000; padding: 15px; overflow-y: auto; }
+        .modal-content { background: var(--bg-card); backdrop-filter: blur(20px); border-radius: 22px; width: 100%; max-width: 750px; margin: 20px auto; padding: 18px; border: 1px solid var(--accent); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: var(--border-glow); padding-bottom: 10px; margin-bottom: 15px; }
+        .close-modal { background: none; border: none; font-size: 22px; color: var(--text-primary); cursor: pointer; padding: 0 6px; }
+        
+        .form-group { margin-bottom: 12px; }
+        label { display: block; font-weight: 500; margin-bottom: 4px; font-size: 0.75rem; color: var(--accent); }
+        input, select, textarea { background: var(--input-bg); border: var(--border-glow); border-radius: 14px; padding: 8px 12px; color: var(--text-primary); font-size: 13px; outline: none; width: 100%; }
+        button { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); border: none; padding: 10px; border-radius: 25px; font-weight: 600; font-size: 13px; color: #0a2a1a; cursor: pointer; width: 100%; margin-bottom: 6px; }
+        .btn-small { width: auto; padding: 5px 12px; display: inline-block; margin: 0; }
+        .btn-danger { background: linear-gradient(135deg, var(--danger), #cc2e3b); color: white; }
+        .btn-warning { background: linear-gradient(135deg, var(--warning), #cc8400); color: white; }
+        .flex-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .flex-row button { flex: 1; }
+        
+        .table-wrapper { overflow-x: auto; margin: 10px 0; border-radius: 12px; max-height: 400px; overflow-y: auto; }
+        .student-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 380px; }
+        .student-table th { background: var(--table-header-bg); padding: 8px; text-align: left; color: var(--accent); position: sticky; top: 0; }
+        .student-table td { padding: 6px; border-bottom: var(--border-glow); }
+        
+        .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .grade-cards { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0; }
+        .grade-chip { background: rgba(0, 184, 148, 0.15); padding: 6px 14px; border-radius: 25px; cursor: pointer; font-size: 12px; border: var(--border-glow); }
+        .grade-chip:active { background: var(--accent); color: #0a2a1a; }
+        
+        .payment-month-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 10px 0; }
+        .month-option { background: rgba(255,255,255,0.08); padding: 8px; text-align: center; border-radius: 12px; cursor: pointer; font-size: 12px; border: var(--border-glow); }
+        .month-option.paid { background: var(--success); opacity: 0.6; cursor: not-allowed; }
+        .month-option.selected { background: var(--accent); color: #0a2a1a; border: 2px solid white; }
+        
+        .attendance-btns { display: flex; gap: 5px; }
+        .present-btn, .absent-btn { padding: 4px 8px; border-radius: 18px; font-size: 10px; width: auto; margin: 0; transition: all 0.2s ease; }
+        .present-btn { background: var(--success); color: white; }
+        .absent-btn { background: var(--danger); color: white; }
+        .present-btn:disabled, .absent-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .present-btn:active, .absent-btn:active { transform: scale(0.95); }
+        
+        .skill-input { width: 55px; padding: 5px; font-size: 11px; }
+        .mark-input { width: 65px; padding: 5px; font-size: 12px; }
+        
+        .login-container { max-width: 340px; margin: 50px auto; }
+        .login-header { text-align: center; margin-bottom: 18px; }
+        .login-header i { font-size: 2.8rem; color: var(--accent); background: rgba(0,184,148,0.15); padding: 14px; border-radius: 50%; }
+        
+        .toast-msg { position: fixed; bottom: 70px; left: 15px; right: 15px; background: #1a3a2a; padding: 10px; border-radius: 25px; z-index: 2100; text-align: center; border-left: 4px solid var(--accent); font-size: 12px; color: white; }
+        .loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 3000; display: none; justify-content: center; align-items: center; flex-direction: column; }
+        .spinner { width: 35px; height: 35px; border: 3px solid rgba(0,255,170,0.2); border-top: 3px solid var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .filter-result { background: var(--input-bg); padding: 10px; border-radius: 12px; margin-top: 10px; max-height: 300px; overflow-y: auto; }
+        .pagination { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
+        .pagination button { width: auto; padding: 5px 12px; margin: 0; }
+        
+        .back-link { position: fixed; bottom: 12px; left: 12px; z-index: 100; }
+        .back-link a { color: var(--text-primary); background: var(--bg-card); padding: 6px 12px; border-radius: 25px; font-size: 11px; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; border: var(--border-glow); }
+        
+        .theme-toggle-btn { background: transparent; border: none; color: var(--text-primary); font-size: 1.1rem; cursor: pointer; width: auto; margin: 0; }
+        
+        .priority-High, .priority-Medium, .priority-Low, .status-Completed, .status-Pending {
+            padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 600; display: inline-block;
+        }
+        .priority-High { background: #ff4757; color: white; }
+        .priority-Medium { background: #ffa502; color: white; }
+        .priority-Low { background: #2ed573; color: white; }
+        .status-Completed { background: #2ed573; color: white; }
+        .status-Pending { background: #ffa502; color: white; }
+        
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); position: fixed; }
+            .sidebar.show-sidebar.mobile-open { transform: translateX(0); width: 70%; }
+            .main-content { margin-left: 0 !important; padding: 12px; padding-bottom: 60px; }
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .charts-row { grid-template-columns: 1fr; gap: 12px; }
+            .section-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+            .payment-month-grid { grid-template-columns: repeat(3, 1fr); }
+            .top-navbar { flex-direction: column; align-items: stretch; }
+            .search-global { width: 100%; }
+            .nav-icons { justify-content: flex-end; }
+            .form-grid-2 { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 480px) {
+            .stat-card h3 { font-size: 1.2rem; }
+            .stat-card i { font-size: 1.3rem; }
+            .admin-card i { font-size: 1.2rem; }
+            .admin-card span { font-size: 0.6rem; }
+        }
+        @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+    </style>
+</head>
+<body>
+    <canvas id="particle-canvas"></canvas>
+    
+    <div class="sidebar" id="sidebar">
+        <div class="logo-area"><i class="fas fa-brain logo-icon"></i><span class="logo-text">SkillNest</span></div>
+        <div class="sidebar-nav">
+            <div class="sidebar-link active" data-nav="dashboard"><i class="fas fa-tachometer-alt"></i><span>Dashboard</span></div>
+            <div class="sidebar-link" data-nav="students"><i class="fas fa-users"></i><span>Students</span></div>
+            <div class="sidebar-link" data-nav="attendance"><i class="fas fa-calendar-check"></i><span>Attendance</span></div>
+            <div class="sidebar-link" data-nav="exams"><i class="fas fa-chart-line"></i><span>Exams</span></div>
+            <div class="sidebar-link" data-nav="skills"><i class="fas fa-language"></i><span>Skills</span></div>
+            <div class="sidebar-link" data-nav="payments"><i class="fas fa-coins"></i><span>Payments</span></div>
+            <div class="sidebar-link" data-nav="assignments"><i class="fas fa-tasks"></i><span>Assignments</span></div>
+            <div class="sidebar-link" data-nav="achievements"><i class="fas fa-medal"></i><span>Achievements</span></div>
+            <div class="sidebar-link" data-nav="reports"><i class="fas fa-database"></i><span>Reports</span></div>
+            <div class="sidebar-link" data-nav="announce"><i class="fab fa-whatsapp"></i><span>WhatsApp</span></div>
+            <div class="sidebar-link" data-nav="settings"><i class="fas fa-cog"></i><span>Settings</span></div>
+        </div>
+        <div class="sync-status"><span class="sync-dot"></span><span>Google Sheets Live</span></div>
+    </div>
+    
+    <div class="main-content">
+        <div class="top-navbar" id="topNavbar">
+            <div class="search-global"><i class="fas fa-search"></i><input type="text" id="globalSearch" placeholder="Search student... (Ctrl+K)"></div>
+            <div class="nav-icons">
+                <div class="icon-badge" id="notificationBell"><i class="far fa-bell"></i><span class="badge-count" id="notifBadge">0</span></div>
+                <div class="sync-status"><span class="sync-dot"></span><span>Synced</span></div>
+                <button id="quickAddBtn" class="btn-small" style="background:rgba(0,255,170,0.2); color:var(--accent);"><i class="fas fa-plus"></i> Add</button>
+                <button class="theme-toggle-btn" id="themeToggleBtn"><i class="fas fa-moon"></i></button>
+                <div class="admin-avatar"><i class="fas fa-user-cog"></i></div>
+                <button id="toggleSidebarBtn" style="background:transparent; border:none; color:var(--text-primary);"><i class="fas fa-bars"></i></button>
+            </div>
+        </div>
+        
+        <div id="adminLoginPanel" style="display: block;">
+            <div class="login-container">
+                <div class="glass-panel" style="background: var(--bg-card); border-radius: 22px; padding: 22px; text-align: center;">
+                    <div class="login-header"><i class="fas fa-user-shield"></i><h2 style="color: var(--accent); margin-top: 6px;">Admin Portal</h2><p style="color: var(--text-secondary); font-size: 0.75rem;">SkillNest Management</p></div>
+                    <div class="form-group"><label>Username</label><input type="text" id="adminUser" placeholder="Enter username"></div>
+                    <div class="form-group"><label>Password</label><input type="password" id="adminPass" placeholder="Enter password"></div>
+                    <button id="adminLoginBtn"><i class="fas fa-sign-in-alt"></i> Access Dashboard</button>
+                    <div id="adminLoginMsg" style="margin-top: 10px; text-align: center; color: #ff6b6b; font-size: 0.7rem;"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="adminDashboard" style="display: none;">
+            <h1 style="font-size: 1.3rem; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;"><i class="fas fa-chalkboard-user" style="color: var(--accent);"></i> Nest Admin Console</h1>
+            
+            <div class="kpi-grid">
+                <div class="stat-card"><i class="fas fa-users" style="color: #ffffff;"></i><h3 id="totalStudents">0</h3><p>Total Students</p></div>
+                <div class="stat-card"><i class="fas fa-coins" style="color: #ffc400;"></i><h3 id="monthlyIncome">Rs.0</h3><p>Monthly Income</p></div>
+                <div class="stat-card"><i class="fas fa-exclamation-triangle" style="color: #ff0000;"></i><h3 id="pendingPayments">0</h3><p>Pending Payments</p></div>
+                <div class="stat-card"><i class="fas fa-chart-line" style="color: #c402ff;"></i><h3 id="avgAttendance">0%</h3><p>Today's Attendance</p></div>
+            </div>
+            
+            <div class="charts-row">
+                <div class="chart-card"><h4><i class="fas fa-chart-line"></i> Attendance Trend (Weekly)</h4><canvas id="attendanceChart" height="90"></canvas></div>
+                <div class="chart-card"><h4><i class="fas fa-chart-bar"></i> Payment Analytics</h4><canvas id="paymentChart" height="90" ></canvas></div>
+            </div>
+            
+            <div class="pending-alert"><span><i class="fas fa-clock"></i> Pending Approvals: <strong id="pendingCount">0</strong></span><button id="viewPendingBtn" class="btn-small btn-warning"><i class="fas fa-check-circle"></i> Review</button></div>
+            
+            <div class="section-grid">
+                <div class="admin-card" data-section="register"><i class="fas fa-user-plus"></i><span>Register</span></div>
+                <div class="admin-card" data-section="update"><i class="fas fa-edit"></i><span>Update</span></div>
+                <div class="admin-card" data-section="attend"><i class="fas fa-calendar-check"></i><span>Attendance</span></div>
+                <div class="admin-card" data-section="exam"><i class="fas fa-chart-line"></i><span>Exam Marks</span></div>
+                <div class="admin-card" data-section="skill"><i class="fas fa-language"></i><span>Skills</span></div>
+                <div class="admin-card" data-section="payment"><i class="fas fa-coins"></i><span>Payments</span></div>
+                <div class="admin-card" data-section="assignments"><i class="fas fa-tasks"></i><span>Assignments</span></div>
+                <div class="admin-card" data-section="achievements"><i class="fas fa-medal"></i><span>Achievements</span></div>
+                <div class="admin-card" data-section="filter"><i class="fas fa-filter"></i><span>ID Filter</span></div>
+                <div class="admin-card" data-section="datafilter"><i class="fas fa-database"></i><span>Data Viewer</span></div>
+                <div class="admin-card" data-section="promote"><i class="fas fa-arrow-up"></i><span>Promote</span></div>
+                <div class="admin-card" data-section="whatsapp"><span>WhatsApp</span></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bottom-nav" id="bottomNav">
+        <div class="bottom-nav-item active" data-nav="dashboard"><i class="fas fa-home"></i><span>Home</span></div>
+        <div class="bottom-nav-item" data-nav="students"><i class="fas fa-users"></i><span>Students</span></div>
+        <div class="bottom-nav-item" data-nav="attendance"><i class="fas fa-calendar-check"></i><span>Attendance</span></div>
+        <div class="bottom-nav-item" data-nav="payments"><i class="fas fa-coins"></i><span>Payments</span></div>
+        <div class="bottom-nav-item" data-nav="reports"><i class="fas fa-database"></i><span>Data</span></div>
+    </div>
+    
+    <div class="fab" id="fab"><i class="fas fa-plus"></i></div>
+    <div id="dynamicModal" class="modal"><div id="modalInner"></div></div>
+    <div class="loader-overlay" id="loadingOverlay"><div class="spinner"></div><div>Processing...</div></div>
+    <div class="back-link"><a href="index.html"><i class="fas fa-arrow-left"></i> Back</a></div>
+    
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw5DQ7ntkusXuVoy9lhxDF2eXDlZ50GzPZSz4Rf6uxYHbUq5pUBOHFvdsvrTHxCu7B_JA/exec";
+        const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        let attendanceChart, paymentChart;
+        
+        function showLoader(show){ document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none'; }
+        function showToast(msg, isError){ let t=document.createElement('div'); t.className='toast-msg'; t.style.background=isError?'#ff4757':'#2ed573'; t.innerHTML=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),3000); }
+        
+        function addOneDay(dateStr){
+            if(!dateStr) return '';
+            let clean = String(dateStr).split('T')[0];
+            if(clean.match(/^\d{4}-\d{2}-\d{2}$/)){
+                let parts = clean.split('-');
+                let date = new Date(Date.UTC(parts[0], parts[1]-1, parts[2]));
+                date.setUTCDate(date.getUTCDate() + 1);
+                return `${date.getUTCFullYear()}-${String(date.getUTCMonth()+1).padStart(2,'0')}-${String(date.getUTCDate()).padStart(2,'0')}`;
+            }
+            return clean;
+        }
+        
+        function processDataDates(data){
+            if(!data) return data;
+            if(Array.isArray(data)) return data.map(item => processDataDates(item));
+            if(typeof data === 'object' && data !== null){
+                let newObj = {};
+                for(let key in data){
+                    let val = data[key];
+                    if(val && typeof val === 'string' && (key.toLowerCase().includes('date') || key === 'Birth')){
+                        newObj[key] = addOneDay(val);
+                    } else if(val && typeof val === 'object'){
+                        newObj[key] = processDataDates(val);
+                    } else {
+                        newObj[key] = val;
+                    }
+                }
+                return newObj;
+            }
+            return data;
+        }
+        
+        async function apiCall(action, method='GET', payload={}){
+            try{
+                let url=new URL(SCRIPT_URL);
+                if(method==='GET'){
+                    url.searchParams.append('action',action);
+                    Object.entries(payload).forEach(([k,v])=>v!==undefined && url.searchParams.append(k,v));
+                    let r=await fetch(url);
+                    let result=await r.json();
+                    if(result.success && result.data) result.data = processDataDates(result.data);
+                    return result;
+                } else{
+                    let f=new URLSearchParams();
+                    f.append('action',action);
+                    f.append('data',JSON.stringify(payload));
+                    let r=await fetch(SCRIPT_URL,{method:'POST',body:f});
+                    let result=await r.json();
+                    if(result.success && result.data) result.data = processDataDates(result.data);
+                    return result;
+                }
+            } catch(e){ return { error:true, message:e.message }; }
+        }
+        
+        function closeModal(){ document.getElementById('dynamicModal').style.display='none'; }
+        function openModal(html){ document.getElementById('modalInner').innerHTML=html; document.getElementById('dynamicModal').style.display='block'; }
+        document.getElementById('dynamicModal')?.addEventListener('click',function(e){ if(e.target===this) closeModal(); });
+        
+        async function getNextId(){ 
+            let r=await apiCall('getAllStudents','GET'); 
+            if(r.success){ 
+                let max=0; 
+                r.data.forEach(s=>{ let n=parseInt(s.id?.substring(1)); if(n>max) max=n; }); 
+                return 'S'+String(max+1).padStart(3,'0'); 
+            } 
+            return 'S001'; 
+        }
+        
+        async function showRegisterModal(){
+            let nextId=await getNextId();
+            let html=`<div class="modal-content"><div class="modal-header"><h2><i class="fas fa-user-plus"></i> Register Student</h2><button class="close-modal" onclick="closeModal()">&times;</button></div><form id="regForm"><div class="form-group"><label>Student ID</label><input name="id" value="${nextId}" readonly></div><div class="form-group"><label>Email</label><input name="email" type="email" required></div><div class="form-group"><label>Full Name</label><input name="name" required></div><div class="form-group"><label>Grade</label><select name="grade">${Array.from({length:13},(_,i)=>`<option value="${i+1}">Grade ${i+1}</option>`).join('')}</select></div><div class="form-group"><label>Phone</label><input name="phone" required></div><div class="form-group"><label>Gender</label><select name="gender"><option>Male</option><option>Female</option></select></div><div class="form-group"><label>Birth Date</label><input name="birth" type="date"></div><div class="form-group"><label>Address</label><input name="address"></div><div class="form-group"><label>Parent Info</label><input name="parentInf"></div><div class="flex-row"><button type="submit">Register</button><button type="button" class="btn-danger" onclick="closeModal()">Cancel</button></div></form></div>`;
+            openModal(html);
+            document.getElementById('regForm').onsubmit=async function(e){
+                e.preventDefault(); let fd=new FormData(e.target); let data={}; fd.forEach((v,k)=>data[k]=v);
+                showLoader(true); let r=await apiCall('registerStudent','POST',data); showLoader(false);
+                if(r.success){ showToast('Registered!'); alert(`Student Registered!\nID: ${r.id}\nPassword: ${r.password}`); closeModal(); await loadDashboardStats(); } else { showToast(r.message,true); }
+            };
+        }
+        
+        function showUpdateModal(){
+            let html=`<div class="modal-content"><div class="modal-header"><h2><i class="fas fa-edit"></i> Update Student</h2><button class="close-modal" onclick="closeModal()">&times;</button></div><div class="form-group"><label>Student ID</label><input id="updateId" placeholder="S001"></div><button id="fetchStudentBtn">Fetch</button><div id="updateFormContainer"></div></div>`;
+            openModal(html);
+            document.getElementById('fetchStudentBtn').onclick=async function(){
+                let id=document.getElementById('updateId').value.trim();
+                if(!id){ showToast('Enter ID',true); return; }
+                showLoader(true); 
+                let r=await apiCall('getStudentData','GET',{id}); 
+                showLoader(false);
+                if(r.success){
+                    let s = r.data;
+                    let birthDate = s.birth ? addOneDay(s.birth) : '';
+                    let formHtml=`
+                        <form id="updateForm">
+                            <input name="id" value="${s.id || ''}" readonly>
+                            <div class="form-group"><label>Password</label><input name="password" type="text" value="${s.password || ''}" placeholder="Enter password"></div>
+                            <div class="form-group"><label>Name</label><input name="name" value="${s.name || ''}"></div>
+                            <div class="form-group"><label>Grade</label><select name="grade">${Array.from({length:13},(_,i)=>`<option ${s.grade==i+1?'selected':''}>${i+1}</option>`).join('')}</select></div>
+                            <div class="form-group"><label>Phone</label><input name="phone" value="${s.phone || ''}"></div>
+                            <div class="form-group"><label>Email</label><input name="email" value="${s.email || ''}"></div>
+                            <div class="form-group"><label>Gender</label><select name="gender"><option ${s.gender=='Male'?'selected':''}>Male</option><option ${s.gender=='Female'?'selected':''}>Female</option></select></div>
+                            <div class="form-group"><label>Birth Date</label><input name="birth" type="date" value="${birthDate}"></div>
+                            <div class="form-group"><label>Address</label><input name="address" value="${s.address || ''}"></div>
+                            <div class="form-group"><label>Parent Info</label><input name="parentInf" value="${s.parentInf || ''}"></div>
+                            <div class="flex-row"><button type="submit">Update</button><button type="button" id="deleteBtn" class="btn-danger">Delete</button></div>
+                        </form>`;
+                    document.getElementById('updateFormContainer').innerHTML=formHtml;
+                    document.getElementById('updateForm').onsubmit=async function(ev){
+                        ev.preventDefault(); let fd=new FormData(ev.target); let data={}; fd.forEach((v,k)=>data[k]=v);
+                        showLoader(true); await apiCall('updateStudent','POST',data); showLoader(false);
+                        showToast('Updated'); closeModal(); await loadDashboardStats();
+                    };
+                    document.getElementById('deleteBtn').onclick=async function(){
+                        if(confirm('Delete?')){ showLoader(true); await apiCall('deleteStudent','POST',{id}); showLoader(false); showToast('Deleted'); closeModal(); await loadDashboardStats(); }
+                    };
+                } else showToast('Not found',true);
+            };
+        }
+        
+        function showAttendanceGradeSelect(){
+            let grades=[1,2,3,4,5,6,7,8,9,10,11,12,13];
+            let chips=grades.map(g=>`<div class="grade-chip" data-grade="${g}">Grade ${g}</div>`).join('');
+            let html=`<div class="modal-content"><div class="modal-header"><h2>Attendance</h2><button class="close-modal" onclick="closeModal()">&times;</button></div><div class="grade-cards">${chips}</div><div id="attendanceArea"></div></div>`;
+            openModal(html);
+            document.querySelectorAll('.grade-chip').forEach(chip=>chip.addEventListener('click',()=>showAttendanceUI(chip.dataset.grade)));
+        }
+        
+        async function showAttendanceUI(grade) {
+            let d = new Date();
+            let today = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+            let check = await apiCall('checkAttendanceToday', 'GET', { grade, date: today });
+            if (check.exists) { showToast(`Already marked`, true); return; }
+            let students = await apiCall('getAllStudentsByGrade', 'GET', { grade });
+            if (!students.success || !students.data.length) { document.getElementById('attendanceArea').innerHTML = '<p>No students</p>'; return; }
+            let rows = students.data.map(s => `<tr><td>${s.id}</td><td>${s.name}</td><td><div class="attendance-btns"><button class="present-btn" data-id="${s.id}">P</button><button class="absent-btn" data-id="${s.id}">A</button></div></td></tr>`).join('');
+            let html = `<h3>Grade ${grade} - ${today}</h3><div class="table-wrapper"><table class="student-table"><thead><tr><th>ID</th><th>Name</th><th>Mark</th></tr></thead><tbody>${rows}</tbody></table></div><button id="saveAttendBtn">Save Attendance</button>`;
+            document.getElementById('attendanceArea').innerHTML = html;
+            let records = {};
+            const presentBtns = document.querySelectorAll('.present-btn');
+            const absentBtns = document.querySelectorAll('.absent-btn');
+            function disableButton(clickedBtn, isPresent) {
+                const row = clickedBtn.closest('tr');
+                const presentBtn = row.querySelector('.present-btn');
+                const absentBtn = row.querySelector('.absent-btn');
+                if (isPresent) {
+                    presentBtn.disabled = true; absentBtn.disabled = false;
+                    presentBtn.style.opacity = '0.5'; absentBtn.style.opacity = '1';
+                    records[clickedBtn.dataset.id] = 'Present';
+                } else {
+                    absentBtn.disabled = true; presentBtn.disabled = false;
+                    absentBtn.style.opacity = '0.5'; presentBtn.style.opacity = '1';
+                    records[clickedBtn.dataset.id] = 'Absent';
+                }
+            }
+            presentBtns.forEach(btn => { btn.addEventListener('click', function() { disableButton(this, true); showToast(`Marked Present: ${this.dataset.id}`); }); });
+            absentBtns.forEach(btn => { btn.addEventListener('click', function() { disableButton(this, false); showToast(`Marked Absent: ${this.dataset.id}`); }); });
+            document.getElementById('saveAttendBtn').onclick = async function() {
+                let recs = Object.entries(records).map(([id, status]) => ({ id, status }));
+                if (!recs.length) { showToast('Mark at least one student!', true); return; }
+                showLoader(true); let r = await apiCall('saveAttendance', 'POST', { grade, date: today, records: recs }); showLoader(false);
+                if (r.success) { showToast('Attendance saved!'); closeModal(); await loadDashboardStats(); } else { showToast(r.message, true); }
+            };
+        }
+        
+        function showExamGradeSelect(){
+            let grades=[1,2,3,4,5,6,7,8,9,10,11,12,13];
+            let chips=grades.map(g=>`<div class="grade-chip" data-grade="${g}">Grade ${g}</div>`).join('');
+            let html=`<div class="modal-content"><div class="modal-header"><h2>Exam Marks</h2><button class="close-modal" onclick="closeModal()">&times;</button></div><div class="grade-cards">${chips}</div><div id="examArea"></div></div>`;
+            openModal(html);
+            document.querySelectorAll('.grade-chip').forEach(chip=>chip.addEventListener('click',()=>showExamUI(chip.dataset.grade)));
+        }
+        
+        async function showExamUI(grade){
+            let students=await apiCall('getAllStudentsByGrade','GET',{grade});
+            if(!students.success||!students.data.length){ document.getElementById('examArea').innerHTML='<p>No students</p>'; return; }
+            let today=new Date().toISOString().slice(0,10);
+            let rows=students.data.map(s=>`<tr><td>${s.id}</td><td>${s.name}</td><td><input class="mark-input" data-id="${s.id}" placeholder="0-100" style="width:65px;"></td></tr>`).join('');
+            let html=`<div><label>Date</label><input id="examDate" value="${today}"></div><div class="table-wrapper"><table class="student-table"><thead><tr><th>ID</th><th>Name</th><th>Mark</th></tr></thead><tbody>${rows}</tbody></table></div><button id="saveExamBtn">Save</button>`;
+            document.getElementById('examArea').innerHTML=html;
+            document.getElementById('saveExamBtn').onclick=async function(){
+                let date=document.getElementById('examDate').value;
+                let marks=[]; document.querySelectorAll('.mark-input').forEach(inp=>{ if(inp.value) marks.push({id:inp.dataset.id,mark:parseInt(inp.value)}); });
+                if(!marks.length){ showToast('No marks',true); return; }
+                showLoader(true); let r=await apiCall('saveExamMarks','POST',{grade,date,marks}); showLoader(false);
+                if(r.success){ showToast('Saved'); closeModal(); } else showToast(r.message,true);
+            };
+        }
+        
+        function showSkillGradeSelect(){
+            let grades=[1,2,3,4,5,6,7,8,9,10,11,12,13];
+            let chips=grades.map(g=>`<div class="grade-chip" data-grade="${g}">Grade ${g}</div>`).join('');
+            let html=`<div class="modal-content"><div class="modal-header"><h2>Skills</h2><button class="close-modal" onclick="closeModal()">&times;</button></div><div class="grade-cards">${chips}</div><div id="skillArea"></div></div>`;
+            openModal(html);
+            document.querySelectorAll('.grade-chip').forEach(chip=>chip.addEventListener('click',()=>showSkillUI(chip.dataset.grade)));
+        }
+        
+        async function showSkillUI(grade){
+            let students=await apiCall('getAllStudentsByGrade','GET',{grade});
+            if(!students.success||!students.data.length){ document.getElementById('skillArea').innerHTML='<p>No students</p>'; return; }
+            let rows=students.data.map(s=>`<tr><td>${s.id}</td><td>${s.name}</td><td><div style="display:flex; gap:4px; flex-wrap:wrap;"><input class="skill-grammar" data-id="${s.id}" placeholder="Gram" style="width:55px;"><input class="skill-writing" data-id="${s.id}" placeholder="Writ" style="width:55px;"><input class="skill-reading" data-id="${s.id}" placeholder="Read" style="width:55px;"><input class="skill-spoken" data-id="${s.id}" placeholder="Spok" style="width:55px;"></div></td><td><button class="save-skill-btn btn-small" data-id="${s.id}">Save</button></td></tr>`).join('');
+            let html=`<div class="table-wrapper"><table class="student-table"><thead><tr><th>ID</th><th>Name</th><th>Grammar / Writing / Reading / Spoken</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+            document.getElementById('skillArea').innerHTML=html;
+            document.querySelectorAll('.save-skill-btn').forEach(btn=>btn.addEventListener('click',async function(){
+                let id=this.dataset.id;
+                let grammar=document.querySelector(`.skill-grammar[data-id="${id}"]`).value||0;
+                let writing=document.querySelector(`.skill-writing[data-id="${id}"]`).value||0;
+                let reading=document.querySelector(`.skill-reading[data-id="${id}"]`).value||0;
+                let spoken=document.querySelector(`.skill-spoken[data-id="${id}"]`).value||0;
+                showLoader(true); await apiCall('saveSkill','POST',{id,grammar,writing,reading,spoken}); showLoader(false);
+                showToast(`Saved!`);
+            }));
+        }
+        
+        function showPaymentGradeSelect(){
+            let grades=[1,2,3,4,5,6,7,8,9,10,11,12,13];
+            let chips=grades.map(g=>`<div class="grade-chip" data-grade="${g}">Grade ${g}</div>`).join('');
+            let html=`<div class="modal-content"><div class="modal-header"><h2>Payments</h2><button class="close-modal" onclick="closeModal()">&times;</button></div><div class="grade-cards">${chips}</div><div id="paymentArea"></div></div>`;
+            openModal(html);
+            document.querySelectorAll('.grade-chip').forEach(chip=>chip.addEventListener('click',()=>showPaymentUI(chip.dataset.grade)));
+        }
+        
+        async function showPaymentUI(grade){
+            let students=await apiCall('getAllStudentsByGrade','GET',{grade});
+            if(!students.success||!students.data.length){ document.getElementById('paymentArea').innerHTML='<p>No students</p>'; return; }
+            let rows=students.data.map(s=>`<tr><td>${s.id}</td><td>${s.name}</td><td><button class="mark-payment-btn btn-small" data-id="${s.id}">Pay</button></td></tr>`).join('');
+            document.getElementById('paymentArea').innerHTML=`<div class="table-wrapper"><table class="student-table"><thead><tr><th>ID</th><th>Name</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+            document.querySelectorAll('.mark-payment-btn').forEach(btn=>btn.addEventListener('click',async function(){
+                let id=this.dataset.id;
+                let payments=await apiCall('getPayments','GET',{id});
+                let paidMonths=payments.success?payments.data.map(p=>p.month):[];
+                let year=new Date().getFullYear();
+                let monthGrid=months.map(m=>`<div class="month-option ${paidMonths.includes(m)?'paid':''}" data-month="${m}">${m}</div>`).join('');
+                let modalHtml=`<div class="modal-content"><h3>Select Month for ${year}</h3><div class="payment-month-grid">${monthGrid}</div><button id="confirmPaymentBtn">Confirm</button></div>`;
+                openModal(modalHtml);
+                let selected=null;
+                document.querySelectorAll('.month-option:not(.paid)').forEach(opt=>opt.addEventListener('click',function(){ selected=this.dataset.month; document.getElementById('confirmPaymentBtn').disabled=false; this.classList.add('selected'); }));
+                document.getElementById('confirmPaymentBtn').onclick=async function(){
+                    if(selected){ showLoader(true); await apiCall('savePayment','POST',{id,month:selected,year}); showLoader(false); showToast(`Payment recorded for ${selected}`); closeModal(); await loadDashboardStats(); }
+                };
+            }));
+        }
+        
+        // ==================== ASSIGNMENTS SECTION ====================
+        async function showAssignmentsUI() {
+            let html = `
+                <div class="modal-content" style="max-width: 800px;">
+                    <div class="modal-header">
+                        <h2><i class="fas fa-tasks"></i> Student Assignments</h2>
+                        <button class="close-modal" onclick="closeModal()">&times;</button>
+                    </div>
+                    <div class="form-group"><label>Student ID</label><input type="text" id="assignmentStudentId" placeholder="S001"></div>
+                    <button id="loadAssignmentsBtn">Load Assignments</button>
+                    <div id="assignmentsResult" style="margin-top: 15px;"></div>
+                    <hr style="margin: 20px 0; border-color: var(--border-glow);">
+                    <h3><i class="fas fa-plus-circle"></i> Add New Assignment</h3>
+                    <div class="form-group"><label>Student ID</label><input type="text" id="newAssignmentStudentId" placeholder="S001"></div>
+                    <div class="form-group"><label>Title</label><input type="text" id="assignmentTitle" placeholder="Assignment Title"></div>
+                    <div class="form-grid-2">
+                        <div class="form-group"><label>Priority</label><select id="assignmentPriority"><option value="High">High</option><option value="Medium">Medium</option><option value="Low">Low</option></select></div>
+                        <div class="form-group"><label>Subject</label><input type="text" id="assignmentSubject" placeholder="English, Maths..."></div>
+                    </div>
+                    <div class="form-group"><label>Due Date</label><input type="date" id="assignmentDueDate"></div>
+                    <div class="form-group"><label>Status</label><select id="assignmentStatus"><option value="Pending">Pending</option><option value="Completed">Completed</option></select></div>
+                    <button id="saveAssignmentBtn">Save Assignment</button>
+                </div>
+            `;
+            openModal(html);
+            
+            document.getElementById('loadAssignmentsBtn').onclick = async function() {
+                let studentId = document.getElementById('assignmentStudentId').value.trim();
+                if (!studentId) { showToast('Enter Student ID', true); return; }
+                showLoader(true);
+                let r = await apiCall('getAssignments', 'GET', { id: studentId });
+                showLoader(false);
+                if (r.success && r.data && r.data.length > 0) {
+                    let table = `<div class="table-wrapper"><table class="student-table"><thead><tr><th>Title</th><th>Priority</th><th>Subject</th><th>Due Date</th><th>Status</th></tr></thead><tbody>`;
+                    r.data.forEach(a => {
+                        table += `<tr><td>${a.title}</td><td><span class="priority-${a.priority}">${a.priority}</span></td><td>${a.subject || '-'}</td><td>${a.dueDate || '-'}</td><td><span class="status-${a.status}">${a.status}</span></td></tr>`;
+                    });
+                    table += `</tbody></table></div>`;
+                    document.getElementById('assignmentsResult').innerHTML = table;
+                } else {
+                    document.getElementById('assignmentsResult').innerHTML = '<p>No assignments found for this student</p>';
+                }
+            };
+            
+            document.getElementById('saveAssignmentBtn').onclick = async function() {
+                let studentId = document.getElementById('newAssignmentStudentId').value.trim();
+                if (!studentId) { showToast('Enter Student ID', true); return; }
+                let data = {
+                    id: studentId,
+                    title: document.getElementById('assignmentTitle').value,
+                    priority: document.getElementById('assignmentPriority').value,
+                    dueDate: document.getElementById('assignmentDueDate').value,
+                    subject: document.getElementById('assignmentSubject').value,
+                    status: document.getElementById('assignmentStatus').value
+                };
+                if (!data.title) { showToast('Enter Title', true); return; }
+                showLoader(true);
+                let r = await apiCall('saveAssignment', 'POST', data);
+                showLoader(false);
+                if (r.success) {
+                    showToast('Assignment saved!');
+                    document.getElementById('assignmentTitle').value = '';
+                    document.getElementById('assignmentSubject').value = '';
+                    document.getElementById('assignmentDueDate').value = '';
+                } else { showToast(r.message, true); }
+            };
+        }
+        
+        // ==================== ACHIEVEMENTS SECTION ====================
+        async function showAchievementsUI() {
+            let html = `
+                <div class="modal-content" style="max-width: 800px;">
+                    <div class="modal-header">
+                        <h2><i class="fas fa-medal"></i> Student Achievements</h2>
+                        <button class="close-modal" onclick="closeModal()">&times;</button>
+                    </div>
+                    <div class="form-group"><label>Student ID</label><input type="text" id="achievementStudentId" placeholder="S001"></div>
+                    <button id="loadAchievementsBtn">Load Achievements</button>
+                    <div id="achievementsResult" style="margin-top: 15px;"></div>
+                    <hr style="margin: 20px 0; border-color: var(--border-glow);">
+                    <h3><i class="fas fa-plus-circle"></i> Add New Achievement</h3>
+                    <div class="form-group"><label>Student ID</label><input type="text" id="newAchievementStudentId" placeholder="S001"></div>
+                    <div class="form-group"><label>Achievement Name</label><input type="text" id="achievementName" placeholder="e.g., Perfect Attendance"></div>
+                    <div class="form-grid-2">
+                        <div class="form-group"><label>Icon (Font Awesome)</label><input type="text" id="achievementIcon" placeholder="fas fa-star" value="fas fa-medal"></div>
+                        <div class="form-group"><label>Color</label><input type="color" id="achievementColor" value="#f59e0b"></div>
+                    </div>
+                    <div class="form-group"><label>Date Earned</label><input type="date" id="achievementDate"></div>
+                    <div class="form-group"><label>Description</label><textarea id="achievementDescription" rows="2" placeholder="Achievement description..."></textarea></div>
+                    <button id="saveAchievementBtn">Save Achievement</button>
+                </div>
+            `;
+            openModal(html);
+            
+            document.getElementById('loadAchievementsBtn').onclick = async function() {
+                let studentId = document.getElementById('achievementStudentId').value.trim();
+                if (!studentId) { showToast('Enter Student ID', true); return; }
+                showLoader(true);
+                let r = await apiCall('getAchievements', 'GET', { id: studentId });
+                showLoader(false);
+                if (r.success && r.data && r.data.length > 0) {
+                    let table = `<div class="table-wrapper"><table class="student-table"><thead><tr><th>Icon</th><th>Name</th><th>Date Earned</th><th>Description</th></tr></thead><tbody>`;
+                    r.data.forEach(a => {
+                        table += `<tr><td><i class="${a.icon}" style="color: ${a.color}; font-size: 1.2rem;"></i></td><td>${a.name}</td><td>${a.dateEarned || '-'}</td><td>${a.description || '-'}</td></tr>`;
+                    });
+                    table += `</tbody></table></div>`;
+                    document.getElementById('achievementsResult').innerHTML = table;
+                } else {
+                    document.getElementById('achievementsResult').innerHTML = '<p>No achievements found for this student</p>';
+                }
+            };
+            
+            document.getElementById('saveAchievementBtn').onclick = async function() {
+                let studentId = document.getElementById('newAchievementStudentId').value.trim();
+                if (!studentId) { showToast('Enter Student ID', true); return; }
+                let data = {
+                    id: studentId,
+                    name: document.getElementById('achievementName').value,
+                    icon: document.getElementById('achievementIcon').value,
+                    color: document.getElementById('achievementColor').value,
+                    dateEarned: document.getElementById('achievementDate').value,
+                    description: document.getElementById('achievementDescription').value
+                };
+                if (!data.name) { showToast('Enter Achievement Name', true); return; }
+                showLoader(true);
+                let r = await apiCall('saveAchievement', 'POST', data);
+                showLoader(false);
+                if (r.success) {
+                    showToast('Achievement saved!');
+                    document.getElementById('achievementName').value = '';
+                    document.getElementById('achievementDescription').value = '';
+                } else { showToast(r.message, true); }
+            };
+        }
+        
+        let currentFilterData = [], currentPage = 1, rowsPerPage = 10;
+        
+        function showFilterModal(){
+            let html=`<div class="modal-content" style="max-width:800px;"><div class="modal-header"><h2>Student ID Filter</h2><button class="close-modal" onclick="closeModal()">&times;</button></div><div class="form-group"><label>Student ID</label><input type="text" id="filterId" placeholder="S001"></div><div class="form-group"><label>Select Sheet</label><select id="filterSheet"><option>Registration</option><option>Attendance</option><option>ExamMarks</option><option>Skills</option><option>Payments</option></select></div><button id="runFilterBtn">Search</button><div id="filterResult" style="margin-top:15px;"></div><div class="pagination" id="paginationControls" style="display:none;"><button id="prevPageBtn">Previous</button><span id="pageInfo" style="margin:0 10px;">Page 1</span><button id="nextPageBtn">Next</button></div></div>`;
+            openModal(html);
+            document.getElementById('runFilterBtn').onclick=async function(){
+                let id=document.getElementById('filterId').value.trim();
+                let sheet=document.getElementById('filterSheet').value;
+                if(!id){ showToast('Enter Student ID',true); return; }
+                showLoader(true);
+                let r=await apiCall('getStudentByFilter','POST',{id,sheetName:sheet});
+                showLoader(false);
+                if(r.success){
+                    currentFilterData = r.data;
+                    currentPage = 1;
+                    displayFilterData();
+                    document.getElementById('paginationControls').style.display = 'flex';
+                } else { showToast(r.message,true); document.getElementById('filterResult').innerHTML=`<p>No records found</p>`; document.getElementById('paginationControls').style.display = 'none'; }
+            };
+            function displayFilterData(){
+                if(!currentFilterData || currentFilterData.length === 0){ document.getElementById('filterResult').innerHTML='<p>No records</p>'; return; }
+                const start = (currentPage-1)*rowsPerPage;
+                const end = start+rowsPerPage;
+                const pageData = currentFilterData.slice(start,end);
+                const headers = Object.keys(pageData[0]||{});
+                let table = `<div class="table-wrapper"><table class="student-table"><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>`;
+                pageData.forEach(row => { table += `<tr>${headers.map(h=>`<td>${row[h] !== undefined && row[h] !== null ? row[h] : '-'}</td>`).join('')}</tr>`; });
+                table += `</tbody></table></div>`;
+                document.getElementById('filterResult').innerHTML = table;
+                document.getElementById('pageInfo').innerText = `Page ${currentPage} of ${Math.ceil(currentFilterData.length/rowsPerPage)}`;
+            }
+            document.getElementById('prevPageBtn')?.addEventListener('click',()=>{ if(currentPage>1){ currentPage--; displayFilterData(); } });
+            document.getElementById('nextPageBtn')?.addEventListener('click',()=>{ if(currentPage<Math.ceil(currentFilterData.length/rowsPerPage)){ currentPage++; displayFilterData(); } });
+        }
+        
+        async function showDataFilterUI(){
+            let grades=[1,2,3,4,5,6,7,8,9,10,11,12,13];
+            let sheets=['Registration','Attendance','ExamMarks','Skills','Payments','Assignments','Achievements'];
+            let html=`<div class="modal-content" style="max-width:95%;"><div class="modal-header"><h2>Grade Wise Data Viewer</h2><button class="close-modal" onclick="closeModal()">&times;</button></div>
+            <div class="form-grid-2"><div class="form-group"><label>Grade</label><select id="filterGrade"><option value="">Select</option>${grades.map(g=>`<option value="${g}">Grade ${g}</option>`).join('')}</select></div>
+            <div class="form-group"><label>Sheet</label><select id="filterSheet"><option value="">Select</option>${sheets.map(s=>`<option value="${s}">${s}</option>`).join('')}</select></div></div>
+            <div id="dateFilterDiv" style="display:none;"><div class="form-group"><label>Date</label><select id="filterDate"><option value="">All Dates</option></select></div></div>
+            <div id="monthFilterDiv" style="display:none;"><div class="form-group"><label>Month</label><select id="filterMonth"><option value="">All Months</option>${months.map(m=>`<option value="${m}">${m}</option>`).join('')}</select></div></div>
+            <div class="flex-row"><button id="filterLoadBtn">Load</button><button id="filterExportBtn" class="export-btn" style="display:none;">Export CSV</button></div>
+            <div id="filterResult" style="margin-top:12px; max-height:350px; overflow:auto;"></div></div>`;
+            openModal(html);
+            let currentData=[];
+            document.getElementById('filterSheet').onchange=async function(){
+                let sheet=this.value, grade=document.getElementById('filterGrade').value;
+                document.getElementById('dateFilterDiv').style.display=(sheet==='Attendance'||sheet==='ExamMarks')?'block':'none';
+                document.getElementById('monthFilterDiv').style.display=(sheet==='Payments')?'block':'none';
+                if(sheet && grade && (sheet==='Attendance'||sheet==='ExamMarks')){
+                    showLoader(true);
+                    let r=await apiCall('getDistinctDatesForSheet','GET',{sheetName:sheet,grade:grade});
+                    showLoader(false);
+                    if(r.success && r.data){
+                        let dateSelect=document.getElementById('filterDate');
+                        dateSelect.innerHTML='<option value="">All Dates</option>'+r.data.map(d=>`<option value="${d}">${addOneDay(d)}</option>`).join('');
+                    }
+                }
+            };
+            document.getElementById('filterGrade').onchange=function(){ let sheet=document.getElementById('filterSheet').value; if(sheet) document.getElementById('filterSheet').dispatchEvent(new Event('change')); };
+            document.getElementById('filterLoadBtn').onclick=async function(){
+                let grade=document.getElementById('filterGrade').value, sheet=document.getElementById('filterSheet').value;
+                if(!grade||!sheet){ showToast('Select Grade and Sheet',true); return; }
+                let dateFilter=document.getElementById('filterDate')?.value||null;
+                let monthFilter=document.getElementById('filterMonth')?.value||null;
+                showLoader(true);
+                let r=await apiCall('getFilteredDataByGrade','POST',{sheetName:sheet,grade:grade,dateFilter:dateFilter,monthFilter:monthFilter});
+                showLoader(false);
+                if(r.success && r.data){ currentData=r.data; displayDataTable(currentData); document.getElementById('filterExportBtn').style.display='inline-flex'; }
+                else showToast(r.message||'No data',true);
+            };
+            document.getElementById('filterExportBtn').onclick=function(){
+                if(!currentData.length){ showToast('No data',true); return; }
+                let csv=convertToCSV(currentData);
+                downloadCSV(csv,`${document.getElementById('filterSheet').value}_Grade${document.getElementById('filterGrade').value}.csv`);
+                showToast('Exported!');
+            };
+        }
+        
+        function displayDataTable(data){
+            if(!data||data.length===0){ document.getElementById('filterResult').innerHTML='<p>No records</p>'; return; }
+            let headers=Object.keys(data[0]);
+            let table=`<div class="table-wrapper"><table class="student-table"><thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${data.map(row=>`<tr>${headers.map(h=>`<td>${row[h]||'-'}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+            document.getElementById('filterResult').innerHTML=table;
+        }
+        
+        function openWhatsApp(){ window.open('https://chat.whatsapp.com/D9K8kTiTwrsEJjMraVnASK', '_blank'); }
+        
+        async function promoteAllGrades(){
+            if(confirm('Promote all students?')){ showLoader(true); await apiCall('promoteGrades','POST'); showLoader(false); showToast('Promoted!'); await loadDashboardStats(); }
+        }
+        
+        async function showPendingApprovals(){
+            showLoader(true); let r=await apiCall('getPendingRegistrations','GET'); showLoader(false);
+            if(!r.success||!r.data.length){ showToast('No pending'); return; }
+            let rows=r.data.map(p=>`<tr><td>${p.id}</td><td>${p.name}</td><td>Grade ${p.grade}</td><td>${p.phone}</td><td><div style="display:flex;gap:4px;"><button class="approve-btn btn-small" data-id="${p.id}" style="background:#2ed573;color:white;">Approve</button><button class="reject-btn btn-small" data-id="${p.id}" style="background:#ff4757;color:white;">Reject</button></div></td></tr>`).join('');
+            let html=`<div class="modal-content"><div class="modal-header"><h2>Pending Approvals</h2><button onclick="closeModal()">&times;</button></div><div class="table-wrapper"><table class="student-table"><thead><tr><th>ID</th><th>Name</th><th>Grade</th><th>Phone</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table></div></div>`;
+            openModal(html);
+            document.querySelectorAll('.approve-btn').forEach(btn=>btn.addEventListener('click',async function(){ let id=this.dataset.id; showLoader(true); await apiCall('approveRegistration','POST',{id}); showLoader(false); showToast('Approved'); closeModal(); await loadPendingCount(); await loadDashboardStats(); }));
+            document.querySelectorAll('.reject-btn').forEach(btn=>btn.addEventListener('click',async function(){ let id=this.dataset.id; showLoader(true); await apiCall('rejectRegistration','POST',{id}); showLoader(false); showToast('Rejected'); closeModal(); await loadPendingCount(); }));
+        }
+        
+        async function loadDashboardStats(){
+            try{
+                showLoader(true);
+                let students = await apiCall('getAllStudents', 'GET');
+                let totalStudentsCount = 0;
+                if(students.success) { totalStudentsCount = students.data.length; document.getElementById('totalStudents').innerText = totalStudentsCount; } else { document.getElementById('totalStudents').innerText = '0'; }
+                
+                let payments = await apiCall('getAllPayments', 'GET');
+                let today = new Date();
+                let currentMonth = today.getMonth() + 1;
+                let currentYear = today.getFullYear();
+                let monthlyTotal = 0;
+                let monthlyPayments = [0, 0, 0, 0, 0, 0];
+                
+                if(payments.success && payments.data) {
+                    payments.data.forEach(p => {
+                        let paymentMonth = null, paymentYear = null;
+                        if(p.paymentDate) { let parts = String(p.paymentDate).split('T')[0].split('-'); paymentMonth = Number(parts[1]); paymentYear = Number(parts[0]); }
+                        if(paymentMonth === currentMonth && paymentYear === currentYear) { monthlyTotal += 1000; }
+                        let monthIdx = months.indexOf(p.month);
+                        if(monthIdx >= 0 && monthIdx < 6) { monthlyPayments[monthIdx] += 1000; }
+                    });
+                }
+                document.getElementById('monthlyIncome').innerText = 'Rs.' + monthlyTotal.toLocaleString();
+                
+                let pendingCount = 0;
+                if(students.success && payments.success) {
+                    let monthNames = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    let currentMonthName = monthNames[currentMonth];
+                    students.data.forEach(s => {
+                        let hasPaid = payments.data ? payments.data.some(p => p.id === s.id && p.month === currentMonthName && Number(p.year) === currentYear) : false;
+                        if(!hasPaid) pendingCount++;
+                    });
+                }
+                document.getElementById('pendingPayments').innerText = pendingCount;
+// පළමුව monthNames array එක define කරන්න (function එක ඇතුලේ)
+const monthNames = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const currentMonthName = monthNames[currentMonth];
+
+// ඉන්පසු monthly income save code එක
+if (today.getDate() === 30) {
+    const saveResult = await apiCall('saveMonthlyIncome', 'POST', {
+        month: currentMonthName,
+        year: currentYear,
+        totalIncome: monthlyTotal,
+        studentCount: totalStudentsCount
+    });
+    console.log('Monthly income saved:', saveResult);
+}
+                
+                let todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+                let attendanceData = await apiCall('getAttendanceByDate', 'GET', { date: todayStr });
+                let presentCount = 0, totalCount = 0, uniqueKeys = new Set();
+                if(attendanceData.success && attendanceData.data) {
+                    attendanceData.data.forEach(record => {
+                        let key = record.id + '_' + record.date;
+                        if(!uniqueKeys.has(key)) { uniqueKeys.add(key); if(record.status === 'Present') presentCount++; totalCount++; }
+                    });
+                }
+                let avgAttendance = totalCount > 0 ? Math.round((presentCount / totalCount) * 100) : 0;
+                document.getElementById('avgAttendance').innerText = avgAttendance;
+                
+                let weeklyAverages = [85, 88, 92, 90];
+                let allAttendance = await apiCall('getAttendanceData', 'GET');
+                if(allAttendance.success && allAttendance.data) {
+                    let weeklyPresent = [0,0,0,0], weeklyTotal = [0,0,0,0], weekUniqueKeys = new Set(), now = new Date();
+                    allAttendance.data.forEach(record => {
+                        let recordDate = new Date(String(record.date).split('T')[0]);
+                        let diffDays = Math.floor((now - recordDate) / (1000 * 60 * 60 * 24));
+                        let weekIndex = Math.floor(diffDays / 7);
+                        if(weekIndex >= 0 && weekIndex < 4) {
+                            let key = record.id + '_' + recordDate.toDateString();
+                            if(!weekUniqueKeys.has(key)) {
+                                weekUniqueKeys.add(key);
+                                if(record.status === 'Present') weeklyPresent[weekIndex]++;
+                                weeklyTotal[weekIndex]++;
+                            }
+                        }
+                    });
+                    for(let i=0;i<4;i++){ if(weeklyTotal[i]>0){ weeklyAverages[i]=Math.round((weeklyPresent[i]/weeklyTotal[i])*100); } }
+                    weeklyAverages.reverse();
+                }
+                if(attendanceChart) attendanceChart.destroy();
+                attendanceChart = new Chart(document.getElementById('attendanceChart'), { type:'line', data:{ labels:['Week 1','Week 2','Week 3','Week 4'], datasets:[{ label:'Attendance %', data:weeklyAverages, borderColor:'#00ffaa', backgroundColor:'rgba(0,255,170,0.1)', tension:0.3, fill:true }] }, options:{ responsive:true, maintainAspectRatio:true } });
+                if(paymentChart) paymentChart.destroy();
+                paymentChart = new Chart(document.getElementById('paymentChart'), { type:'bar', data:{ labels:['Jan','Feb','Mar','Apr','May','Jun'], datasets:[{ label:'Collections (Rs.)', data:monthlyPayments, backgroundColor:'#00ffaa80', borderRadius:8 }] }, options:{ responsive:true, maintainAspectRatio:true } });
+                showLoader(false);
+            } catch(e) { console.error('Error loading dashboard stats:', e); showLoader(false); }
+        }
+
+        async function loadPendingCount(){ 
+            let r=await apiCall('getPendingRegistrations','GET'); 
+            if(r.success){ document.getElementById('pendingCount').innerText=r.data.length; document.getElementById('notifBadge').innerText=r.data.length; } 
+        }
+        
+        function convertToCSV(data){ if(!data.length) return ''; let headers=Object.keys(data[0]); let rows=data.map(row=>headers.map(h=>`"${String(row[h]||'').replace(/"/g,'""')}"`).join(',')); return [headers.join(','),...rows].join('\n'); }
+        function downloadCSV(csv,filename){ let blob=new Blob(["\uFEFF"+csv],{type:'text/csv'}); let link=document.createElement('a'); link.href=URL.createObjectURL(blob); link.download=filename; link.click(); URL.revokeObjectURL(link.href); }
+        
+        document.querySelectorAll('.admin-card').forEach(card=>{ card.addEventListener('click',function(){
+            let s=this.dataset.section;
+            if(s==='register') showRegisterModal();
+            else if(s==='update') showUpdateModal();
+            else if(s==='attend') showAttendanceGradeSelect();
+            else if(s==='exam') showExamGradeSelect();
+            else if(s==='skill') showSkillGradeSelect();
+            else if(s==='payment') showPaymentGradeSelect();
+            else if(s==='assignments') showAssignmentsUI();
+            else if(s==='achievements') showAchievementsUI();
+            else if(s==='filter') showFilterModal();
+            else if(s==='datafilter') showDataFilterUI();
+            else if(s==='promote') promoteAllGrades();
+            else if(s==='whatsapp') openWhatsApp();
+        }); });
+        
+        document.getElementById('viewPendingBtn')?.addEventListener('click',showPendingApprovals);
+        document.getElementById('fab')?.addEventListener('click',()=>showRegisterModal());
+        document.getElementById('quickAddBtn')?.addEventListener('click',()=>showRegisterModal());
+        document.getElementById('globalSearch')?.addEventListener('keypress',(e)=>{ if(e.key==='Enter') showUpdateModal(); });
+        
+        // ==================== ADMIN LOGIN ====================
+        let loginAttempts = 0;
+        const MAX_ATTEMPTS = 3;
+        const BLOCK_KEY = 'adminLoginBlocked';
+        const ATTEMPT_KEY = 'adminLoginAttempts';
+        
+        if (localStorage.getItem(BLOCK_KEY) === 'true') {
+            document.getElementById('adminLoginPanel').innerHTML = `<div class="glass-panel" style="max-width: 400px; margin: 0 auto; text-align: center;"><i class="fas fa-lock" style="font-size: 4rem; color: #ff4757; margin-bottom: 20px;"></i><h2 style="color: var(--text-primary);">Device Blocked</h2><p style="color: var(--text-secondary); margin: 20px 0;">Too many failed login attempts.</p><button onclick="window.location.href='index.html'" style="margin-top: 20px; background: #747d8c;"><i class="fas fa-arrow-left"></i> Back to Home</button></div>`;
+            document.getElementById('adminLoginBtn')?.remove();
+        }
+        
+        const savedAttempts = localStorage.getItem(ATTEMPT_KEY);
+        if (savedAttempts) loginAttempts = parseInt(savedAttempts);
+        
+        document.getElementById('adminLoginBtn').addEventListener('click', async function() {
+            let u = document.getElementById('adminUser').value.trim();
+            let p = document.getElementById('adminPass').value;
+            const validUsernames = ['Thuli', '001@U_M_R:ADMIN'];
+            const validPasswords = ['001@Thuli_$Deshan:T1-M:T', 'E001@U_M_R:Admin-M/T'];
+            if (validUsernames.includes(u) && validPasswords.includes(p)) {
+                loginAttempts = 0;
+                localStorage.removeItem(ATTEMPT_KEY);
+                localStorage.removeItem(BLOCK_KEY);
+                document.getElementById('adminLoginPanel').style.display = 'none';
+                document.getElementById('adminDashboard').style.display = 'block';
+                document.getElementById('topNavbar').classList.add('show-top-navbar');
+                document.getElementById('bottomNav').classList.add('show-bottom-nav');
+                document.getElementById('fab').classList.add('show-fab');
+                document.getElementById('sidebar').classList.add('show-sidebar');
+                loadDashboardStats(); loadPendingCount();
+                showToast('Welcome Admin!');
+                document.getElementById('adminPass').value = '';
+            } else {
+                loginAttempts++;
+                localStorage.setItem(ATTEMPT_KEY, loginAttempts);
+                const remainingAttempts = MAX_ATTEMPTS - loginAttempts;
+                if (loginAttempts >= MAX_ATTEMPTS) {
+                    localStorage.setItem(BLOCK_KEY, 'true');
+                    const deviceInfo = { userAgent: navigator.userAgent, platform: navigator.platform, screen: `${window.screen.width}x${window.screen.height}`, timestamp: new Date().toISOString(), ip: 'Client IP' };
+                    try { const ipRes = await fetch('https://api.ipify.org?format=json'); const ipData = await ipRes.json(); deviceInfo.ip = ipData.ip; } catch (e) {}
+                    showLoader(true); await apiCall('saveBlockedDevice', 'POST', { username: u || 'Unknown', deviceInfo: deviceInfo }); showLoader(false);
+                    document.getElementById('adminLoginMsg').innerHTML = '<i class="fas fa-lock"></i> Device blocked! Contact admin.';
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    document.getElementById('adminLoginMsg').innerHTML = `<i class="fas fa-exclamation-triangle"></i> Invalid credentials! ${remainingAttempts} attempt${remainingAttempts > 1 ? 's' : ''} remaining.`;
+                    document.getElementById('adminPass').value = '';
+                    const passInput = document.getElementById('adminPass');
+                    passInput.style.animation = 'shake 0.3s ease';
+                    setTimeout(() => passInput.style.animation = '', 300);
+                }
+            }
+        });
+        
+        document.getElementById('adminPass').addEventListener('keypress', function(e) { if (e.key === 'Enter') document.getElementById('adminLoginBtn').click(); });
+        
+        const savedTheme = localStorage.getItem('skillnest_theme');
+        if(savedTheme === 'dark'){ document.body.classList.add('dark-mode'); document.getElementById('themeToggleBtn').innerHTML = '<i class="fas fa-sun"></i>'; }
+        document.getElementById('themeToggleBtn')?.addEventListener('click',()=>{ document.body.classList.toggle('dark-mode'); const isDark = document.body.classList.contains('dark-mode'); const icon = document.querySelector('#themeToggleBtn i'); if(isDark){ icon.className = 'fas fa-sun'; localStorage.setItem('skillnest_theme', 'dark'); } else { icon.className = 'fas fa-moon'; localStorage.setItem('skillnest_theme', 'light'); } });
+        
+        document.getElementById('toggleSidebarBtn')?.addEventListener('click',()=>{ document.getElementById('sidebar').classList.toggle('collapsed'); document.getElementById('sidebar').classList.toggle('mobile-open'); });
+        
+        document.querySelectorAll('.sidebar-link, .bottom-nav-item').forEach(el=>{ el.addEventListener('click',function(){ let nav=this.dataset.nav; if(nav==='dashboard') location.reload(); else if(nav==='students') showUpdateModal(); else if(nav==='attendance') showAttendanceGradeSelect(); else if(nav==='exams') showExamGradeSelect(); else if(nav==='skills') showSkillGradeSelect(); else if(nav==='payments') showPaymentGradeSelect(); else if(nav==='assignments') showAssignmentsUI(); else if(nav==='achievements') showAchievementsUI(); else if(nav==='reports') showDataFilterUI(); else if(nav==='announce') openWhatsApp(); }); });
+        
+        document.getElementById('sidebar').classList.remove('show-sidebar');
+        
+        const canvas=document.getElementById('particle-canvas'); const ctx=canvas.getContext('2d'); let particles=[];
+        function resizeCanvas(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
+        window.addEventListener('resize',resizeCanvas); resizeCanvas();
+        for(let i=0;i<60;i++) particles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,radius:Math.random()*2+1,alpha:Math.random()*0.3});
+        function drawParticles(){
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            particles.forEach(p=>{ ctx.beginPath(); ctx.arc(p.x,p.y,p.radius,0,Math.PI*2); ctx.fillStyle=`rgba(0,255,170,${p.alpha})`; ctx.fill(); p.y+=0.2; if(p.y>canvas.height) p.y=0; });
+            requestAnimationFrame(drawParticles);
+        }
+        drawParticles();
+
+
+// ==================== FEE REMINDER MANAGER (WITH FIXED SWEETALERT Z-INDEX) ====================
+let feeDataList = [];
+let feeCurrentPage = 1;
+const feeRowsPerPage = 12;
+let feeReminderStorage = {};
+
+try {
+    let saved = localStorage.getItem('feeReminderHistory');
+    if (saved) feeReminderStorage = JSON.parse(saved);
+} catch(e) {}
+
+// Fix SweetAlert z-index - Add this CSS
+let swalFixStyle = document.createElement('style');
+swalFixStyle.textContent = `
+    .swal2-container {
+        z-index: 200000 !important;
+    }
+    .swal2-popup {
+        z-index: 200001 !important;
+    }
+    .swal2-backdrop {
+        z-index: 199999 !important;
+    }
+    .swal2-container-fee {
+        z-index: 200000 !important;
+    }
+`;
+document.head.appendChild(swalFixStyle);
+
+// Check if current date is past 3rd week (21st of month)
+function isPastThirdWeek() {
+    let today = new Date();
+    return today.getDate() > 21;
+}
+
+// Get due months for a student
+function getDueMonthsForStudent(studentId, payments) {
+    let dueMonthsList = [];
+    let currentDate = new Date();
+    let currentYear = currentDate.getFullYear();
+    let currentMonthIndex = currentDate.getMonth();
+    let currentMonthName = months[currentMonthIndex];
+    let isPastThirdWeekFlag = isPastThirdWeek();
+    
+    let paidMonths = new Set();
+    for (let p of payments) {
+        let pid = p.ID || p.id;
+        let pmonth = p.Month || p.month;
+        let pyear = String(p.Year || p.year);
+        if (pid === studentId) {
+            paidMonths.add(pmonth + '_' + pyear);
+        }
+    }
+    
+    let currentKey = currentMonthName + '_' + currentYear;
+    if (isPastThirdWeekFlag) {
+        if (!paidMonths.has(currentKey)) {
+            dueMonthsList.push({ month: currentMonthName, year: currentYear });
+        }
+    }
+    
+    for (let i = 1; i <= 2; i++) {
+        let prevMonthIndex = currentMonthIndex - i;
+        let prevYear = currentYear;
+        if (prevMonthIndex < 0) {
+            prevMonthIndex += 12;
+            prevYear--;
+        }
+        let prevMonthName = months[prevMonthIndex];
+        let prevKey = prevMonthName + '_' + prevYear;
+        if (!paidMonths.has(prevKey)) {
+            let exists = dueMonthsList.some(d => d.month === prevMonthName && d.year === prevYear);
+            if (!exists) {
+                dueMonthsList.push({ month: prevMonthName, year: prevYear });
+            }
+        }
+    }
+    
+    dueMonthsList.sort((a, b) => {
+        if (a.year !== b.year) return a.year - b.year;
+        return months.indexOf(a.month) - months.indexOf(b.month);
+    });
+    
+    return dueMonthsList;
+}
+
+function updateYearSelector() {
+    let yearSelect = document.getElementById('feeYearSelect');
+    if (yearSelect) {
+        let currentYear = new Date().getFullYear();
+        let years = [];
+        for (let y = currentYear - 1; y <= currentYear + 2; y++) years.push(y);
+        yearSelect.innerHTML = years.map(y => `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}</option>`).join('');
+    }
+}
+
+function addFeeReminderToTopNav() {
+    let navIcons = document.querySelector('.nav-icons');
+    if (navIcons && !document.getElementById('topNavFeeBtn')) {
+        let feeNavBtn = document.createElement('button');
+        feeNavBtn.id = 'topNavFeeBtn';
+        feeNavBtn.className = 'btn-small';
+        feeNavBtn.style.cssText = 'background:rgba(0,255,170,0.2); color:var(--accent); border:none; padding:8px 14px; border-radius:25px; cursor:pointer;';
+        feeNavBtn.innerHTML = '<i class="fas fa-bell"></i> Fee';
+        feeNavBtn.title = "Fee Reminder Manager";
+        feeNavBtn.onclick = (e) => { e.stopPropagation(); openFeeReminder(); };
+        navIcons.insertBefore(feeNavBtn, navIcons.firstChild);
+    }
+}
+
+window.openFeeReminder = function() {
+    let popup = document.getElementById('feeReminderPopup');
+    if (popup) { 
+        popup.style.display = 'flex'; 
+        loadFeeData(); 
+        return; 
+    }
+    
+    popup = document.createElement('div');
+    popup.id = 'feeReminderPopup';
+    popup.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);backdrop-filter:blur(10px);z-index:100000;display:flex;justify-content:center;align-items:center;';
+    
+    popup.innerHTML = `
+        <div style="background:var(--bg-card);border-radius:28px;width:96%;max-width:1600px;height:92%;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);border:1px solid var(--accent);">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 24px;border-bottom:var(--border-glow);flex-shrink:0;">
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <i class="fas fa-bell" style="font-size:1.5rem;color:var(--accent);"></i>
+                    <div>
+                        <h2 style="margin:0;font-size:1.3rem;">📋 Fee Reminder Manager</h2>
+                        <p style="margin:2px 0 0;font-size:0.7rem;color:var(--text-secondary);">Due students only (After 21st of month)</p>
+                    </div>
+                </div>
+                <button id="closeFeeReminder" style="background:rgba(255,71,87,0.2);border:none;width:36px;height:36px;border-radius:50%;cursor:pointer;color:var(--danger);font-size:1.2rem;">✕</button>
+            </div>
+            
+            <div style="padding:12px 20px;border-bottom:var(--border-glow);flex-shrink:0;">
+                <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center;">
+                    <select id="feeYearSelect" style="padding:8px 14px;border-radius:12px;background:var(--input-bg);border:var(--border-glow);color:var(--text-primary);"></select>
+                    <input type="text" id="feeSearchBox" placeholder="Search ID, Name, Phone..." style="padding:8px 14px;border-radius:12px;background:var(--input-bg);border:var(--border-glow);color:var(--text-primary);width:220px;">
+                    <button id="refreshFeeData" style="background:var(--accent);color:#0a2a1a;border:none;padding:8px 18px;border-radius:30px;cursor:pointer;"><i class="fas fa-sync-alt"></i> Refresh</button>
+                    <button id="exportFeeExcel" style="background:#2ed573;color:#0a2a1a;border:none;padding:8px 18px;border-radius:30px;cursor:pointer;"><i class="fas fa-file-excel"></i> Export</button>
+                    <button id="bulkFeeWhatsApp" style="background:#25D366;color:white;border:none;padding:8px 18px;border-radius:30px;cursor:pointer;"><i class="fab fa-whatsapp"></i> Bulk Send</button>
+                    <button id="printFeeReport" style="background:var(--warning);color:white;border:none;padding:8px 18px;border-radius:30px;cursor:pointer;"><i class="fas fa-print"></i> Print</button>
+                </div>
+            </div>
+            
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:12px 20px;border-bottom:var(--border-glow);flex-shrink:0;">
+                <div style="text-align:center;padding:10px;background:var(--accent-light);border-radius:16px;"><i class="fas fa-users"></i><h3 id="totalCountStat" style="font-size:1.1rem;margin:4px 0;">0</h3><p>Due Students</p></div>
+                <div style="text-align:center;padding:10px;background:var(--accent-light);border-radius:16px;"><i class="fas fa-exclamation-triangle"></i><h3 id="dueCountStat" style="font-size:1.1rem;margin:4px 0;">0</h3><p>Pending Months</p></div>
+                <div style="text-align:center;padding:10px;background:var(--accent-light);border-radius:16px;"><i class="fas fa-coins"></i><h3 id="totalAmountStat" style="font-size:1.1rem;margin:4px 0;">Rs.0</h3><p>Total Due</p></div>
+                <div style="text-align:center;padding:10px;background:var(--accent-light);border-radius:16px;"><i class="fab fa-whatsapp"></i><h3 id="sentCountStat" style="font-size:1.1rem;margin:4px 0;">0</h3><p>Reminders Sent</p></div>
+            </div>
+            
+            <div style="flex:1;overflow-y:auto;overflow-x:auto;padding:15px 20px;min-height:0;">
+                <div style="min-width:900px;">
+                    <table style="width:100%;border-collapse:collapse;font-size:0.75rem;">
+                        <thead style="position:sticky;top:0;background:var(--table-header-bg);z-index:10;">
+                            <tr><th style="width:40px;"><input type="checkbox" id="selectAllFeeCheck"></th><th>ID</th><th>Name</th><th>Phone</th><th>Grade</th><th>Monthly Fee</th><th>Due Months</th><th>Total Due</th><th width="100px">Action</th></tr>
+                        </thead>
+                        <tbody id="feeTableBodyList"></tbody>
+                    </table>
+                </div>
+                <div id="feePaginationList" style="display:flex;justify-content:center;gap:15px;margin-top:20px;"></div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(popup);
+    updateYearSelector();
+    
+    document.getElementById('closeFeeReminder').onclick = () => { popup.remove(); };
+    popup.onclick = (e) => { if (e.target === popup) popup.remove(); };
+    
+    document.getElementById('refreshFeeData').onclick = () => { loadFeeData(); };
+    document.getElementById('exportFeeExcel').onclick = () => exportDueExcel();
+    document.getElementById('bulkFeeWhatsApp').onclick = () => bulkWhatsAppSend();
+    document.getElementById('printFeeReport').onclick = () => printFeeReport();
+    document.getElementById('feeYearSelect').onchange = () => { feeCurrentPage = 1; loadFeeData(); };
+    document.getElementById('feeSearchBox').oninput = () => { feeCurrentPage = 1; renderFeeTable(); };
+    
+    loadFeeData();
+};
+
+async function loadFeeData() {
+    let tbody = document.getElementById('feeTableBodyList');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:50px;"><div class="spinner"></div><br>Loading...</td></tr>';
+    
+    let studentsRes = await apiCall('getAllStudents', 'GET');
+    let paymentsRes = await apiCall('getAllPayments', 'GET');
+    
+    let students = studentsRes.success ? studentsRes.data : [];
+    let payments = paymentsRes.success ? paymentsRes.data : [];
+    
+    feeDataList = [];
+    let totalDueAmountOverall = 0;
+    
+    for (let s of students) {
+        let dueMonthsList = getDueMonthsForStudent(s.id, payments);
+        if (dueMonthsList.length > 0) {
+            let totalDueAmount = dueMonthsList.length * 1000;
+            let dueMonthsText = dueMonthsList.map(d => `${d.month} ${d.year}`).join(', ');
+            let key = s.id + '_reminder';
+            let lastReminder = feeReminderStorage[key] || '';
+            
+            feeDataList.push({
+                id: s.id, name: s.name || 'N/A', phone: s.phone || '', grade: s.grade || 'N/A',
+                fee: 1000, dueMonthsList: dueMonthsList, dueMonthsCount: dueMonthsList.length,
+                dueMonthsText: dueMonthsText, totalDueAmount: totalDueAmount, lastReminder: lastReminder
+            });
+            totalDueAmountOverall += totalDueAmount;
+        }
+    }
+    
+    feeDataList.sort((a, b) => b.dueMonthsCount - a.dueMonthsCount);
+    
+    document.getElementById('totalCountStat').innerText = feeDataList.length;
+    document.getElementById('dueCountStat').innerText = feeDataList.reduce((sum, s) => sum + s.dueMonthsCount, 0);
+    document.getElementById('totalAmountStat').innerHTML = `Rs.${totalDueAmountOverall.toLocaleString()}`;
+    document.getElementById('sentCountStat').innerText = Object.keys(feeReminderStorage).length;
+    
+    renderFeeTable();
+}
+
+function renderFeeTable() {
+    let search = document.getElementById('feeSearchBox').value.toLowerCase();
+    let filtered = feeDataList.filter(s => !search || s.id.toLowerCase().includes(search) || s.name.toLowerCase().includes(search) || s.phone.includes(search));
+    
+    let totalPages = Math.ceil(filtered.length / feeRowsPerPage);
+    if (feeCurrentPage > totalPages) feeCurrentPage = 1;
+    let paginated = filtered.slice((feeCurrentPage-1)*feeRowsPerPage, feeCurrentPage*feeRowsPerPage);
+    
+    let tbody = document.getElementById('feeTableBodyList');
+    if (paginated.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:50px;"><i class="fas fa-check-circle" style="font-size:2.5rem;color:#2ed573;"></i><br>No due students! All payments are up to date.</td></tr>';
+        document.getElementById('feePaginationList').innerHTML = '';
+        return;
+    }
+    
+    let html = '';
+    for (let s of paginated) {
+        let hasPhone = s.phone && s.phone !== '';
+        let phoneDisplay = hasPhone ? s.phone : '<span style="color:#ff4757;">No Phone</span>';
+        
+        html += `<tr style="border-bottom:1px solid var(--border-glow);">
+            <td style="padding:10px 8px;"><input type="checkbox" class="studentFeeCheck" data-id="${s.id}" data-name="${s.name.replace(/'/g, "\\'")}" data-phone="${s.phone}" data-fee="${s.fee}" data-duemonths='${JSON.stringify(s.dueMonthsList)}'></td>
+            <td style="padding:10px 8px;"><strong>${s.id}</strong></td>
+            <td style="padding:10px 8px;">${s.name}</td>
+            <td style="padding:10px 8px;">${phoneDisplay}</td>
+            <td style="padding:10px 8px;">${s.grade}</td>
+            <td style="padding:10px 8px;">Rs.${s.fee.toLocaleString()}</td>
+            <td style="padding:10px 8px;"><span style="background:#ffa50220;color:#ffa502;padding:4px 10px;border-radius:15px;">${s.dueMonthsCount} month(s)</span><br><span style="font-size:0.6rem;">${s.dueMonthsText}</span></td>
+            <td style="padding:10px 8px;"><strong style="color:#ff4757;">Rs.${s.totalDueAmount.toLocaleString()}</strong></td>
+            <td style="padding:10px 8px;"><button class="sendWABtn" data-id="${s.id}" data-name="${s.name.replace(/'/g, "\\'")}" data-phone="${s.phone}" data-fee="${s.fee}" data-duemonths='${JSON.stringify(s.dueMonthsList)}' ${!hasPhone ? 'disabled' : ''} style="background:#25D366;color:white;border:none;padding:6px 14px;border-radius:25px;cursor:pointer;"><i class="fab fa-whatsapp"></i> Send</button></td>
+        </tr>`;
+    }
+    tbody.innerHTML = html;
+    
+    let pagDiv = document.getElementById('feePaginationList');
+    if (totalPages <= 1) {
+        pagDiv.innerHTML = '';
+    } else {
+        pagDiv.innerHTML = `<button id="feePrevPageBtn" class="btn-small" ${feeCurrentPage===1?'disabled':''}>◀ Prev</button>
+            <span>${feeCurrentPage} / ${totalPages}</span>
+            <button id="feeNextPageBtn" class="btn-small" ${feeCurrentPage===totalPages?'disabled':''}>Next ▶</button>`;
+        document.getElementById('feePrevPageBtn').onclick = () => { if (feeCurrentPage > 1) { feeCurrentPage--; renderFeeTable(); } };
+        document.getElementById('feeNextPageBtn').onclick = () => { if (feeCurrentPage < totalPages) { feeCurrentPage++; renderFeeTable(); } };
+    }
+    
+    document.getElementById('selectAllFeeCheck').onclick = (e) => {
+        document.querySelectorAll('.studentFeeCheck').forEach(cb => cb.checked = e.target.checked);
+    };
+    
+    document.querySelectorAll('.sendWABtn').forEach(btn => {
+        btn.onclick = () => {
+            let d = btn.dataset;
+            showWhatsAppConfirm(d.id, d.name, d.phone, d.fee, JSON.parse(d.duemonths || '[]'));
+        };
+    });
+}
+
+// FIXED: WhatsApp confirmation with HIGH Z-INDEX
+function showWhatsAppConfirm(id, name, phone, fee, dueMonthsList) {
+    if (!phone) {
+        Swal.fire({
+            title: 'Phone Number Missing',
+            text: `No phone number found for ${name} (${id}).`,
+            icon: 'warning',
+            confirmButtonColor: '#00b894',
+            backdrop: true,
+            allowOutsideClick: false
+        });
+        return;
+    }
+    
+    let dueMonthsText = dueMonthsList.map(m => `${m.month} ${m.year}`).join(', ');
+    let totalAmount = dueMonthsList.length * parseInt(fee);
+    
+    Swal.fire({
+        title: 'Send WhatsApp Reminder?',
+        html: `<div style="text-align:left;"><strong>Student:</strong> ${name}<br><strong>Phone:</strong> ${phone}<br><strong>Due Months:</strong> ${dueMonthsText}<br><strong>Total:</strong> Rs. ${totalAmount.toLocaleString()}</div>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#25D366',
+        cancelButtonColor: '#ff4757',
+        confirmButtonText: '<i class="fab fa-whatsapp"></i> Send',
+        cancelButtonText: 'Cancel',
+        backdrop: true,
+        allowOutsideClick: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            sendWhatsAppMessage(id, name, phone, fee, dueMonthsList);
+        }
+    });
+}
+
+function sendWhatsAppMessage(id, name, phone, fee, dueMonthsList) {
+    let cleanPhone = phone.replace(/\D/g, '');
+    if (cleanPhone.startsWith('0')) cleanPhone = '94' + cleanPhone.substring(1);
+    if (!cleanPhone.startsWith('94')) cleanPhone = '94' + cleanPhone;
+    
+    let dueDate = new Date();
+    dueDate.setDate(dueDate.getDate() + 7);
+    let formattedDueDate = dueDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    
+    let dueMonthsText = dueMonthsList.map(m => `${m.month} ${m.year}`).join(', ');
+    let totalAmount = dueMonthsList.length * parseInt(fee);
+    
+    let message = `💰 *SkillNest – Fee Reminder*
+
+Dear ${name},
+
+Your tuition fee payment is pending for:
+
+📅 Due Months: ${dueMonthsText}
+💰 Total Amount: Rs. ${totalAmount.toLocaleString()}
+
+Please pay before ${formattedDueDate}.
+
+💳 Cash at academy reception
+📞 Contact: +94 76 7899845
+
+🙏 SkillNest Admin Team`;
+    
+    let url = 'https://wa.me/' + cleanPhone + '?text=' + encodeURIComponent(message);
+    
+    let key = id + '_reminder';
+    feeReminderStorage[key] = new Date().toISOString();
+    localStorage.setItem('feeReminderHistory', JSON.stringify(feeReminderStorage));
+    window.open(url, '_blank');
+    
+    document.getElementById('sentCountStat').innerText = Object.keys(feeReminderStorage).length;
+    
+    Swal.fire({ title: 'Sent!', text: `Reminder opened for ${name}`, icon: 'success', timer: 2000, showConfirmButton: false });
+}
+
+async function bulkWhatsAppSend() {
+    let selected = [...document.querySelectorAll('.studentFeeCheck:checked')];
+    if (selected.length === 0) {
+        Swal.fire({ title: 'No Selection', text: 'Select at least one student', icon: 'warning' });
+        return;
+    }
+    
+    let missingPhone = selected.filter(cb => !cb.dataset.phone);
+    if (missingPhone.length > 0) {
+        let result = await Swal.fire({
+            title: 'Missing Phones',
+            text: `${missingPhone.length} student(s) have no phone. Continue?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Continue'
+        });
+        if (!result.isConfirmed) return;
+        selected = selected.filter(cb => cb.dataset.phone);
+    }
+    
+    if (selected.length === 0) {
+        Swal.fire({ title: 'No Valid Students', text: 'No students with phone numbers', icon: 'error' });
+        return;
+    }
+    
+    let confirm = await Swal.fire({
+        title: 'Bulk Reminder',
+        html: `Send to <strong>${selected.length}</strong> student(s)?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fab fa-whatsapp"></i> Send All'
+    });
+    if (!confirm.isConfirmed) return;
+    
+    let sent = 0;
+    for (let cb of selected) {
+        let id = cb.dataset.id, name = cb.dataset.name, phone = cb.dataset.phone, fee = cb.dataset.fee;
+        let dueMonthsList = JSON.parse(cb.dataset.duemonths || '[]');
+        if (phone) {
+            let cleanPhone = phone.replace(/\D/g, '');
+            if (cleanPhone.startsWith('0')) cleanPhone = '94' + cleanPhone.substring(1);
+            if (!cleanPhone.startsWith('94')) cleanPhone = '94' + cleanPhone;
+            
+            let dueMonthsText = dueMonthsList.map(m => `${m.month} ${m.year}`).join(', ');
+            let totalAmount = dueMonthsList.length * parseInt(fee);
+            let dueDate = new Date();
+            dueDate.setDate(dueDate.getDate() + 7);
+            let formattedDueDate = dueDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            
+            let message = `💰 *SkillNest – Fee Reminder*\n\nDear ${name},\n\nYour tuition fee is pending for: ${dueMonthsText}\nTotal: Rs.${totalAmount.toLocaleString()}\nPlease pay before ${formattedDueDate}\n\n📞 Contact: +94 767899845`;
+            window.open('https://wa.me/' + cleanPhone + '?text=' + encodeURIComponent(message), '_blank');
+            
+            feeReminderStorage[id + '_reminder'] = new Date().toISOString();
+            sent++;
+            await new Promise(r => setTimeout(r, 500));
+        }
+    }
+    localStorage.setItem('feeReminderHistory', JSON.stringify(feeReminderStorage));
+    document.getElementById('sentCountStat').innerText = Object.keys(feeReminderStorage).length;
+    Swal.fire({ title: 'Sent!', text: `${sent} reminder(s) sent`, icon: 'success' });
+}
+
+function exportDueExcel() {
+    if (feeDataList.length === 0) {
+        Swal.fire({ title: 'No Data', text: 'No due students to export', icon: 'warning' });
+        return;
+    }
+    let data = feeDataList.map(s => ({ 'ID': s.id, 'Name': s.name, 'Phone': s.phone, 'Grade': s.grade, 'Due Months': s.dueMonthsText, 'Total Due': s.totalDueAmount }));
+    let ws = XLSX.utils.json_to_sheet(data);
+    let wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Due_Students');
+    XLSX.writeFile(wb, `Fee_Due_Report.xlsx`);
+    Swal.fire({ title: 'Exported!', text: `${feeDataList.length} students exported`, icon: 'success', timer: 2000 });
+}
+
+function printFeeReport() {
+    if (feeDataList.length === 0) {
+        Swal.fire({ title: 'No Data', text: 'No due students to print', icon: 'warning' });
+        return;
+    }
+    let totalAmount = feeDataList.reduce((sum, s) => sum + s.totalDueAmount, 0);
+    let win = window.open('', '_blank');
+    win.document.write(`
+        <html><head><title>Fee Due Report</title>
+        <style>body{font-family:Arial;padding:20px;} table{border-collapse:collapse;width:100%;} th,td{border:1px solid #ddd;padding:8px;} th{background:#00b894;color:white;}</style>
+        </head><body>
+        <center><h1>SkillNast - Fee Due Report</h1><h2>English</h2>
+        <h3>Madhavi Rathnayake</h3></center>
+        <p>Date: ${new Date().toLocaleString()}</p>
+        <table><th>ID</th><th>Name</th><th>Phone</th><th>Grade</th><th>Due Months</th><th>Total Due</th></tr>
+        ${feeDataList.map(s => `<tr><td>${s.id}</td><td>${s.name}</td><td>${s.phone||'-'}</td><td>${s.grade}</td><td>${s.dueMonthsText}</td><td>${s.totalDueAmount}</td></tr>`).join('')}
+        </table>
+        <p>Total Due Students: ${feeDataList.length} | Total Amount: Rs.${totalAmount.toLocaleString()}</p>
+        </body></html>
+    `);
+    win.document.close();
+    win.print();
+}
+
+function initFeeReminder() { addFeeReminderToTopNav(); }
+
+let initTimer = setInterval(() => {
+    if (document.getElementById('adminDashboard') && document.getElementById('adminDashboard').style.display === 'block') {
+        if (!window.feeReminderLoaded) { window.feeReminderLoaded = true; initFeeReminder(); clearInterval(initTimer); }
+    }
+}, 500);
+    </script>
+</body>
+</html>

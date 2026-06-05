@@ -1,0 +1,2786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
+<title>SkillNest · Student Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script defer src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="shortcut icon" href="image/icon.png" type="image/x-icon">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  /* ── image-matched palette ── */
+  --bg:        #111827;   /* deep blue-grey body */
+  --bg2:       #1a2332;   /* slightly lighter panels */
+  --bg3:       #1f2d40;   /* card base */
+  --glass:     rgba(30,45,65,0.72);
+  --glass2:    rgba(255,255,255,0.04);
+  --teal:      #02fdb2;   /* primary teal (from image) */
+  --teal2:     #47e0ba;
+  --teal-glow: rgba(45,212,191,0.18);
+  --teal-soft: rgba(45,212,191,0.08);
+  --blue:      #38bdf8;
+  --green:     #34d399;
+  --amber:     #fbbf24;
+  --red:       #f87171;
+  --border:    rgba(45,212,191,0.14);
+  --border2:   rgba(45,212,191,0.32);
+  --t1:#e8f0fe;
+  --t2:#8fa3b8;
+  --t3:#4d637a;
+  --shadow:    0 8px 32px rgba(0,0,0,0.45);
+  --shadow2:   0 2px 12px rgba(0,0,0,0.3);
+  --r1:10px;--r2:16px;--r3:20px;--r4:28px;--r5:50px;
+}
+
+html{scroll-behavior:smooth}
+
+body{
+  background:var(--bg);
+  color:var(--t1);
+  font-family:'Space Grotesk',sans-serif;
+  min-height:100vh;
+  overflow-x:hidden;
+  padding-bottom:90px;
+}
+
+/* ── AMBIENT BACKGROUND ── */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 60% 50% at 15% 0%,   rgba(45,212,191,0.09) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 40% at 90% 80%,  rgba(56,189,248,0.07) 0%,transparent 55%),
+    radial-gradient(ellipse 40% 35% at 50% 50%,  rgba(45,212,191,0.04) 0%,transparent 60%);
+}
+
+/* subtle noise texture overlay */
+body::after{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0.025;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:200px 200px;
+}
+
+.wrap{max-width:430px;margin:0 auto;padding:0 16px;position:relative;z-index:2}
+
+/* ══════ LOADER ══════ */
+.loader-overlay{
+  position:fixed;inset:0;background:var(--bg);z-index:9999;
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px
+}
+.ld-ring{
+  width:56px;height:56px;border-radius:50%;
+  border:3px solid rgba(45,212,191,0.12);
+  border-top-color:var(--teal);
+  border-right-color:var(--blue);
+  animation:spin .9s linear infinite;
+  box-shadow:0 0 24px rgba(45,212,191,0.25)
+}
+.ld-txt{font-size:.7rem;color:var(--teal);letter-spacing:4px;font-family:'Nunito',sans-serif;animation:pulse .9s ease infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+/* ══════ TOAST ══════ */
+.toast-msg{
+  position:fixed;bottom:104px;left:50%;transform:translateX(-50%) translateY(16px);
+  background:rgba(26,35,50,0.96);border:1px solid var(--border2);
+  color:var(--teal);padding:11px 24px;border-radius:var(--r5);
+  z-index:2200;font-size:.78rem;font-family:'Nunito',sans-serif;font-weight:600;
+  backdrop-filter:blur(20px);letter-spacing:.4px;
+  box-shadow:0 0 32px rgba(45,212,191,0.18);
+  animation:toast-up .3s ease forwards
+}
+@keyframes toast-up{to{transform:translateX(-50%) translateY(0)}}
+
+/* THEME FAB */
+.theme-fab{
+  position:fixed;top:16px;right:16px;z-index:1200;
+  width:40px;height:40px;border-radius:50%;
+  background:rgba(26,35,50,0.85);border:1px solid var(--border);
+  color:var(--teal);cursor:pointer;backdrop-filter:blur(12px);
+  display:flex;align-items:center;justify-content:center;
+  transition:all .25s;font-size:.9rem;box-shadow:var(--shadow2)
+}
+.theme-fab:hover{border-color:var(--border2);box-shadow:0 0 20px var(--teal-glow)}
+
+/* ══════════════════════════════════════
+   LOGIN
+══════════════════════════════════════ */
+#loginPanel{padding-top:40px}
+
+.login-shell{
+  position:relative;
+  background:var(--glass);
+  border:1px solid var(--border);
+  border-radius:var(--r4);
+  padding:36px 26px 30px;
+  backdrop-filter:blur(24px);
+  box-shadow:var(--shadow);
+  overflow:hidden;
+}
+/* soft inner top-glow */
+.login-shell::before{
+  content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);
+  width:260px;height:120px;
+  background:radial-gradient(ellipse,rgba(45,212,191,0.18) 0%,transparent 70%);
+  pointer-events:none
+}
+/* teal top-line */
+.login-shell::after{
+  content:'';position:absolute;top:0;left:20%;right:20%;height:2px;
+  background:linear-gradient(90deg,transparent,var(--teal),var(--blue),transparent);
+  border-radius:2px
+}
+
+/* emblem */
+.ls-emblem{text-align:center;margin-bottom:28px}
+.ls-circle{
+  width:76px;height:76px;border-radius:50%;margin:0 auto 14px;
+  background:linear-gradient(135deg,rgba(45,212,191,0.2),rgba(56,189,248,0.1));
+  border:1.5px solid rgba(45,212,191,0.4);
+  display:flex;align-items:center;justify-content:center;
+  position:relative;box-shadow:0 0 40px rgba(45,212,191,0.2)
+}
+.ls-circle::after{
+  content:'';position:absolute;inset:-6px;border-radius:50%;
+  border:1px solid rgba(45,212,191,0.18);
+  animation:ripple 2.5s ease-in-out infinite
+}
+@keyframes ripple{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.05);opacity:.2}}
+.ls-circle i{font-size:1.7rem;color:var(--teal)}
+.ls-title{
+  font-family:'Nunito',sans-serif;font-size:1.85rem;font-weight:900;letter-spacing:3px;
+  background:linear-gradient(135deg,var(--teal),var(--blue));
+  -webkit-background-clip:text;background-clip:text;color:transparent
+}
+.ls-sub{font-size:.68rem;color:var(--t3);letter-spacing:1.5px;margin-top:5px;font-family:'Space Grotesk',sans-serif}
+
+/* fields */
+.lf{margin-bottom:14px}
+.lf-label{font-size:.68rem;font-weight:700;color:rgba(45,212,191,.7);letter-spacing:1.8px;margin-bottom:7px;display:flex;align-items:center;gap:6px;font-family:'Space Grotesk',sans-serif}
+.lf-label i{font-size:.72rem}
+.lf-input{
+  width:100%;padding:14px 18px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(45,212,191,0.18);
+  border-radius:var(--r3);color:var(--t1);
+  font-family:'Space Grotesk',sans-serif;font-size:.92rem;
+  outline:none;transition:all .22s
+}
+.lf-input:focus{border-color:var(--teal);background:rgba(45,212,191,0.06);box-shadow:0 0 0 3px rgba(45,212,191,0.1)}
+.lf-input::placeholder{color:var(--t3)}
+
+/* buttons */
+.btn-teal{
+  width:100%;padding:14px;
+  background:linear-gradient(135deg,var(--teal),var(--teal2));
+  border:none;border-radius:var(--r3);
+  color:#0a1520;font-family:'Nunito',sans-serif;font-size:.9rem;font-weight:800;
+  letter-spacing:.8px;cursor:pointer;transition:all .25s;
+  box-shadow:0 4px 20px rgba(45,212,191,0.35)
+}
+.btn-teal:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(45,212,191,0.45)}
+.btn-teal:active{transform:translateY(0);box-shadow:0 2px 12px rgba(45,212,191,0.3)}
+
+.btn-row{display:flex;gap:10px;margin:12px 0}
+.btn-ghost{
+  flex:1;padding:11px 8px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);border-radius:var(--r3);
+  color:var(--t2);font-family:'Space Grotesk',sans-serif;
+  font-size:.82rem;font-weight:600;cursor:pointer;transition:all .22s;
+  display:flex;align-items:center;justify-content:center;gap:6px
+}
+.btn-ghost:hover{border-color:var(--border2);color:var(--teal);background:var(--teal-soft)}
+
+.btn-line{
+  width:100%;padding:11px;background:transparent;
+  border:1px solid rgba(255,255,255,0.07);border-radius:var(--r3);
+  color:var(--t3);font-size:.82rem;cursor:pointer;transition:all .22s;margin-top:8px;
+  font-family:'Space Grotesk',sans-serif;font-weight:500;letter-spacing:.3px
+}
+.btn-line:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-soft)}
+
+.l-div{height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent);margin:14px 0}
+.login-message{text-align:center;font-size:.72rem;color:var(--red);min-height:24px;margin-top:8px;letter-spacing:.3px}
+
+/* ══════ REG PANEL ══════ */
+#selfRegPanel{padding-top:20px}
+#selfRegPanel .login-shell{padding-bottom:28px}
+#selfRegPanel input,#selfRegPanel select{
+  display:block;width:100%;padding:13px 18px;
+  background:rgba(255,255,255,0.04);border:1px solid var(--border);
+  border-radius:var(--r3);color:var(--t1);
+  font-family:'Space Grotesk',sans-serif;font-size:.9rem;
+  outline:none;transition:all .22s;margin-bottom:10px
+}
+#selfRegPanel input:focus,#selfRegPanel select:focus{border-color:var(--teal);background:var(--teal-soft)}
+#selfRegPanel select option{background:var(--bg2)}
+
+/* ══════════════════════════════════════
+   DASHBOARD
+══════════════════════════════════════ */
+
+/* HEADER */
+.hdr{display:flex;justify-content:space-between;align-items:center;padding:18px 0 14px}
+.hdr-left{display:flex;align-items:center;gap:10px}
+.logo-pill{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(45,212,191,0.08);
+  border:1px solid rgba(45,212,191,0.2);
+  border-radius:var(--r5);padding:6px 14px 6px 8px
+}
+.logo-dot{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--blue));display:flex;align-items:center;justify-content:center}
+.logo-dot i{color:#0a1520;font-size:.8rem}
+.logo-name{font-family:'Nunito',sans-serif;font-size:1rem;font-weight:900;letter-spacing:2px;
+  background:linear-gradient(135deg,var(--teal),var(--blue));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hdr-actions{display:flex;gap:8px}
+.hbtn{
+  width:40px;height:40px;background:var(--glass);border:1px solid var(--border);
+  border-radius:var(--r2);display:flex;align-items:center;justify-content:center;
+  color:var(--t2);cursor:pointer;transition:all .22s;font-size:.9rem;
+  backdrop-filter:blur(12px)
+}
+.hbtn:hover{border-color:var(--border2);color:var(--teal)}
+
+/* WELCOME CARD – inspired by image's hero card */
+.welcome-card{
+  position:relative;
+  background:linear-gradient(145deg,rgba(30,50,70,0.85),rgba(20,35,55,0.9));
+  border:1px solid rgba(45,212,191,0.18);
+  border-radius:var(--r4);padding:22px 20px;margin-bottom:16px;
+  overflow:hidden;backdrop-filter:blur(16px);box-shadow:var(--shadow)
+}
+.welcome-card::before{
+  content:'';position:absolute;top:-40px;right:-40px;
+  width:180px;height:180px;border-radius:50%;
+  background:radial-gradient(circle,rgba(45,212,191,0.14) 0%,transparent 70%)
+}
+.welcome-card::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(45,212,191,0.35),transparent)
+}
+.wc-tag{font-size:.6rem;color:rgba(45,212,191,.6);letter-spacing:3px;font-weight:700;margin-bottom:6px;font-family:'Space Grotesk',sans-serif}
+.wc-name{font-family:'Nunito',sans-serif;font-size:1.6rem;font-weight:900;line-height:1.1;letter-spacing:.5px}
+.wc-name span{color:var(--teal)}
+.wc-sub{font-size:.82rem;color:var(--t2);margin-top:5px}
+.wc-clock{position:absolute;top:20px;right:18px;text-align:right}
+.wc-time{font-family:'Space Grotesk',sans-serif;font-size:1.05rem;font-weight:700;color:var(--teal);letter-spacing:1px}
+.wc-date{font-size:.6rem;color:var(--t3);margin-top:3px;letter-spacing:.8px}
+
+/* STAT STRIP */
+.stat-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.stat-tile{
+  background:var(--glass);border:1px solid var(--border);border-radius:var(--r3);
+  padding:14px 10px;text-align:center;cursor:pointer;
+  transition:all .25s;backdrop-filter:blur(12px);box-shadow:var(--shadow2)
+}
+.stat-tile:hover{border-color:var(--border2);transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,0,0,0.4)}
+.st-icon{width:36px;height:36px;border-radius:10px;background:rgba(45,212,191,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 8px}
+.st-icon i{color:var(--teal);font-size:.95rem}
+.st-val{font-family:'Nunito',sans-serif;font-size:.95rem;font-weight:800;line-height:1}
+.st-lbl{font-size:.58rem;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-top:4px}
+
+/* ALERT */
+.pay-alert{
+  background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.25);
+  border-left:3px solid var(--red);border-radius:var(--r2);
+  padding:11px 14px;margin-bottom:14px;font-size:.82rem;color:#fca5a5;
+  display:none;align-items:center;gap:10px
+}
+.pay-alert.show{display:flex}
+.pay-alert i{color:var(--red);flex-shrink:0}
+
+/* GLASS CARD */
+.gcard{
+  background:var(--glass);border:1px solid var(--border);
+  border-radius:var(--r4);padding:20px;margin-bottom:14px;
+  backdrop-filter:blur(16px);box-shadow:var(--shadow2);transition:border-color .2s
+}
+.gcard:hover{border-color:rgba(45,212,191,0.2)}
+
+.sec-hd{
+  display:flex;align-items:center;gap:9px;margin-bottom:16px;
+  font-size:.7rem;font-weight:700;color:var(--teal);letter-spacing:2px;
+  font-family:'Space Grotesk',sans-serif
+}
+.sec-hd i{font-size:.82rem;opacity:.85}
+.sec-hd .pip{width:5px;height:5px;border-radius:50%;background:var(--teal);box-shadow:0 0 6px var(--teal);flex-shrink:0}
+
+/* ASSIGNMENTS */
+.asgn{
+  background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);
+  border-radius:var(--r2);padding:13px 14px;margin-bottom:8px;
+  display:flex;justify-content:space-between;align-items:center;
+  transition:all .2s;gap:12px
+}
+.asgn:hover{border-color:var(--border);background:rgba(45,212,191,0.04)}
+.asgn-left{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.asgn-left i{color:var(--teal);opacity:.7;flex-shrink:0}
+.asgn-left span{font-size:.88rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.badge{padding:4px 11px;border-radius:var(--r5);font-size:.62rem;font-weight:700;letter-spacing:.8px;flex-shrink:0}
+.badge.high{background:rgba(248,113,113,0.12);color:var(--red);border:1px solid rgba(248,113,113,0.25)}
+.badge.medium{background:rgba(251,191,36,0.1);color:var(--amber);border:1px solid rgba(251,191,36,0.22)}
+.badge.low{background:rgba(52,211,153,0.1);color:var(--green);border:1px solid rgba(52,211,153,0.22)}
+
+/* ACHIEVEMENTS */
+.ach-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ach-tile{
+  background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);
+  border-radius:var(--r3);padding:16px 10px;text-align:center;transition:all .25s
+}
+.ach-tile:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,0.3)}
+.ach-tile i{font-size:1.5rem;display:block;margin-bottom:8px}
+.ach-tile .an{font-size:.82rem;font-weight:700;color:var(--t1)}
+.ach-tile .ad{font-size:.62rem;color:var(--t3);margin-top:3px}
+
+/* STREAK */
+.streak-card{
+  background:linear-gradient(135deg,rgba(251,191,36,0.09),rgba(251,191,36,0.03));
+  border:1px solid rgba(251,191,36,0.2);border-radius:var(--r3);
+  padding:14px 16px;display:flex;align-items:center;gap:14px;margin-bottom:14px
+}
+.sk-em{font-size:1.8rem}
+.sk-main{flex:1}
+.sk-val{font-family:'Nunito',sans-serif;font-size:1.15rem;font-weight:900;color:var(--amber)}
+.sk-sub{font-size:.75rem;color:var(--t2);margin-top:1px}
+.sk-bar-wrap{margin-top:7px}
+.sk-bar{height:4px;background:rgba(251,191,36,0.12);border-radius:10px;overflow:hidden}
+.sk-fill{height:100%;width:70%;background:linear-gradient(90deg,var(--amber),#fde68a);border-radius:10px;transition:width 1.5s cubic-bezier(.4,0,.2,1)}
+
+/* ── EXAM ── */
+.paper-sel{
+  width:100%;padding:12px 16px;background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);border-radius:var(--r2);
+  color:var(--t1);font-family:'Space Grotesk',sans-serif;font-size:.9rem;
+  margin-bottom:16px;cursor:pointer;outline:none;transition:border-color .2s
+}
+.paper-sel:focus{border-color:var(--teal)}
+.paper-sel option{background:var(--bg2)}
+
+.chart-wrap{display:flex;flex-direction:column;align-items:center;margin:4px 0 16px;position:relative}
+.chart-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none}
+.ch-score{font-family:'Nunito',sans-serif;font-size:1.6rem;font-weight:900;color:var(--teal)}
+.ch-sub{font-size:.62rem;color:var(--t3);letter-spacing:1px}
+
+.sk-row{display:flex;align-items:center;gap:10px;margin:9px 0}
+.sk-name{width:64px;font-size:.65rem;color:var(--t2);letter-spacing:.8px;font-weight:600;text-transform:uppercase}
+.sk-track{flex:1;height:5px;background:rgba(255,255,255,0.05);border-radius:10px;overflow:hidden}
+.sk-prog{height:100%;border-radius:10px;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+.sk-pct{font-size:.65rem;color:var(--t3);width:30px;text-align:right;font-family:'Space Grotesk',sans-serif}
+
+/* ── PAYMENT ── */
+.fin-hero{
+  background:linear-gradient(145deg,rgba(30,55,70,0.8),rgba(18,40,58,0.85));
+  border:1px solid rgba(45,212,191,0.18);border-radius:var(--r4);
+  padding:20px;margin-bottom:14px;position:relative;overflow:hidden;
+  backdrop-filter:blur(16px);box-shadow:var(--shadow)
+}
+.fin-hero::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--teal),var(--blue),transparent)
+}
+.frow{display:flex;justify-content:space-between;align-items:center;
+  padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.frow:last-child{border-bottom:none;padding-bottom:0}
+.frow-label{font-size:.8rem;color:var(--t2);display:flex;align-items:center;gap:8px}
+.frow-label i{color:var(--teal);opacity:.55;width:14px}
+.frow-val{font-family:'Nunito',sans-serif;font-size:.88rem;font-weight:800}
+.frow-val.ok{color:var(--green)}
+.frow-val.bad{color:var(--red)}
+.frow-val.warn{color:var(--amber)}
+
+.acc-box{
+  background:rgba(52,211,153,0.07);border:1px solid rgba(52,211,153,0.18);
+  border-radius:var(--r2);padding:13px;text-align:center;margin-top:12px
+}
+.acc-lbl{font-size:.65rem;color:var(--t3);letter-spacing:1px;font-weight:700}
+.acc-num{font-family:'Space Grotesk',sans-serif;font-size:.9rem;color:var(--green);letter-spacing:3px;margin:5px 0;font-weight:700}
+.acc-note{font-size:.62rem;color:var(--t3)}
+
+/* progress viz */
+.prog-card{
+  background:var(--glass);border:1px solid var(--border);border-radius:var(--r3);
+  padding:18px;margin-bottom:14px;backdrop-filter:blur(12px)
+}
+.prog-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.prog-label{font-size:.68rem;font-weight:700;color:var(--teal);letter-spacing:2px}
+.prog-pct{font-family:'Nunito',sans-serif;font-size:.88rem;font-weight:800;color:var(--green)}
+.prog-track{height:8px;background:rgba(255,255,255,0.05);border-radius:10px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--blue));border-radius:10px;transition:width 1.5s cubic-bezier(.4,0,.2,1)}
+.prog-foot{display:flex;justify-content:space-between;margin-top:8px;font-size:.62rem;color:var(--t3);font-family:'Space Grotesk',sans-serif}
+
+/* year summary */
+.yr-card{background:var(--glass);border:1px solid var(--border);border-radius:var(--r3);padding:16px;margin-bottom:14px;backdrop-filter:blur(12px)}
+.yr-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.yr-lbl{font-size:.68rem;font-weight:700;color:var(--teal);letter-spacing:1.5px}
+.yr-sel{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--r5);padding:6px 14px;color:var(--t1);font-size:.8rem;cursor:pointer;outline:none}
+.yr-sel option{background:var(--bg2)}
+.yr-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center}
+.yr-sv{font-family:'Nunito',sans-serif;font-size:.85rem;font-weight:800;color:var(--green)}
+.yr-sl{font-size:.62rem;color:var(--t3);letter-spacing:.5px}
+
+/* month tiles – matching image's card list style */
+.month-list{display:flex;flex-direction:column;gap:8px}
+.m-row{
+  background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);
+  border-radius:var(--r2);padding:13px 16px;
+  display:flex;justify-content:space-between;align-items:center;
+  cursor:pointer;transition:all .22s
+}
+.m-row:hover{border-color:var(--border);background:rgba(45,212,191,0.04)}
+.m-left{display:flex;align-items:center;gap:12px}
+.m-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.m-dot.paid{background:var(--green);box-shadow:0 0 8px var(--green)}
+.m-dot.due{background:var(--red);box-shadow:0 0 8px var(--red)}
+.m-name{font-family:'Nunito',sans-serif;font-size:.9rem;font-weight:700}
+.m-yr{font-size:.7rem;color:var(--t3);margin-top:1px}
+.paid-badge{padding:5px 13px;border-radius:var(--r5);font-size:.65rem;font-weight:700;letter-spacing:.8px;background:rgba(52,211,153,0.12);color:var(--green);border:1px solid rgba(52,211,153,0.25)}
+.pending-badge{padding:5px 13px;border-radius:var(--r5);font-size:.65rem;font-weight:700;letter-spacing:.8px;background:rgba(248,113,113,0.1);color:var(--red);border:1px solid rgba(248,113,113,0.22)}
+
+.receipt-pop{background:var(--glass);border:1px solid var(--border);border-radius:var(--r3);padding:20px;text-align:center;margin-top:10px;backdrop-filter:blur(16px)}
+
+/* ── CONTACT ── */
+.ct-item{
+  display:flex;align-items:center;gap:14px;padding:13px 14px;
+  background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);
+  border-radius:var(--r2);text-decoration:none;color:var(--t1);
+  margin-bottom:8px;transition:all .22s
+}
+.ct-item:hover{border-color:var(--border2);transform:translateX(4px);background:rgba(45,212,191,0.04)}
+.ct-ico{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:.9rem;flex-shrink:0}
+.ct-info .ct-name{font-size:.9rem;font-weight:600}
+.ct-info .ct-det{font-size:.68rem;color:var(--t3);margin-top:2px}
+
+/* ── MODAL ── */
+.modal-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,0.82);backdrop-filter:blur(18px);
+  z-index:1500;justify-content:center;align-items:center
+}
+.modal-box{
+  background:rgba(22,34,52,0.96);border:1px solid var(--border);
+  border-radius:var(--r4);max-width:370px;width:90%;padding:28px;
+  box-shadow:var(--shadow);animation:pop-in .3s cubic-bezier(.34,1.56,.64,1)
+}
+@keyframes pop-in{from{transform:scale(.86);opacity:0}to{transform:scale(1);opacity:1}}
+.pf-av{
+  width:78px;height:78px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(45,212,191,0.25),rgba(56,189,248,0.15));
+  border:2px solid rgba(45,212,191,0.4);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 12px;font-size:1.9rem;color:var(--teal);
+  box-shadow:0 0 36px rgba(45,212,191,0.2)
+}
+.mnu{
+  display:flex;align-items:center;gap:13px;padding:13px 14px;
+  background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);
+  border-radius:var(--r2);margin-bottom:8px;cursor:pointer;
+  color:var(--t1);font-size:.9rem;transition:all .2s
+}
+.mnu:hover{border-color:var(--border2);color:var(--teal)}
+.mnu i{color:var(--teal);width:18px}
+#profileEditFormModal input{
+  display:block;width:100%;padding:12px 16px;
+  background:rgba(255,255,255,0.04);border:1px solid var(--border);
+  border-radius:var(--r2);color:var(--t1);font-family:'Space Grotesk',sans-serif;
+  font-size:.9rem;margin-bottom:10px;outline:none;transition:all .22s
+}
+#profileEditFormModal input:focus{border-color:var(--teal);background:var(--teal-soft)}
+
+/* ── BOTTOM NAV ── */
+/* image-matched: frosted glass pill */
+.bnav{
+  position:fixed;bottom:14px;left:50%;transform:translateX(-50%);
+  width:calc(100% - 32px);max-width:420px;
+  background:rgba(18,30,46,0.92);backdrop-filter:blur(28px);
+  border:1px solid rgba(45,212,191,0.16);border-radius:var(--r4);
+  padding:8px 10px;display:none;justify-content:space-between;
+  z-index:1000;box-shadow:0 -4px 40px rgba(0,0,0,0.5),0 0 0 1px rgba(45,212,191,0.06)
+}
+.ni{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  background:none;border:none;color:var(--t3);
+  font-size:.55rem;font-family:'Space Grotesk',sans-serif;letter-spacing:.5px;font-weight:600;
+  padding:7px 12px;border-radius:var(--r2);cursor:pointer;transition:all .22s
+}
+.ni i{font-size:1.1rem}
+.ni.active{color:var(--teal);background:rgba(45,212,191,0.1)}
+.ni.active i{filter:drop-shadow(0 0 5px rgba(45,212,191,0.7))}
+.ni:hover:not(.active){color:var(--t2)}
+
+/* UTILS */
+.hidden-panel{display:none!important}
+.show-panel{display:block}
+.feature-card{display:none}
+.feature-card.active{display:block}
+@keyframes fade-up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(45,212,191,0.25);border-radius:4px}
+
+/* LIGHT MODE */
+body.light-mode{
+  --bg:#eef3fa;--bg2:#e4ecf5;--bg3:#dae5f2;
+  --glass:rgba(255,255,255,0.7);
+  --border:rgba(45,212,191,0.18);--border2:rgba(45,212,191,0.38);
+  --t1:#0f1f30;--t2:#3d5068;--t3:#6b8099;
+}
+body.light-mode .welcome-card,body.light-mode .fin-hero{background:rgba(255,255,255,0.65)}
+/* Payment Receipt Modal */
+.receipt-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(12px);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.2s ease;
+}
+
+.receipt-modal-content {
+    background: linear-gradient(145deg, #1a2332, #111827);
+    border: 1px solid rgba(45,212,191,0.3);
+    border-radius: 28px;
+    padding: 28px 24px;
+    max-width: 320px;
+    width: 85%;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(45,212,191,0.2);
+    animation: popIn 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.receipt-modal-close {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    background: rgba(255,255,255,0.08);
+    border: none;
+    color: #8fa3b8;
+    font-size: 1.2rem;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.receipt-modal-close:hover {
+    background: rgba(45,212,191,0.2);
+    color: #2dd4bf;
+}
+
+.receipt-modal-icon {
+    font-size: 2.8rem;
+    margin-bottom: 12px;
+}
+
+.receipt-modal-title {
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+.receipt-modal-details {
+    font-size: 0.85rem;
+    color: #8fa3b8;
+    margin: 15px 0;
+    line-height: 1.5;
+}
+
+.receipt-modal-details p {
+    margin: 6px 0;
+}
+
+.receipt-modal-btn {
+    background: linear-gradient(135deg, #2dd4bf, #0d9488);
+    border: none;
+    border-radius: 40px;
+    padding: 12px 24px;
+    color: #0a1520;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    cursor: pointer;
+    margin-top: 10px;
+    width: 100%;
+    transition: all 0.2s;
+}
+
+.receipt-modal-btn:hover {
+    transform: scale(0.97);
+    box-shadow: 0 4px 20px rgba(45,212,191,0.4);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes popIn {
+    from { transform: scale(0.85); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+/* Future month disabled style */
+.m-row.future-month-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.m-row.future-month-disabled:hover {
+    border-color: rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.03);
+    transform: none;
+}
+
+/* Current month special style (enabled but highlighted) */
+.m-row:not(.future-month-disabled) .m-name:contains("Current") {
+    color: var(--amber);
+}
+
+/* Report Card & Print Styles */
+.report-card {
+    background: linear-gradient(135deg, #fff, #f5f5f5);
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 15px;
+    color: #1a1a2e;
+    font-family: 'Nunito', sans-serif;
+}
+
+.report-header {
+    text-align: center;
+    border-bottom: 2px solid #2dd4bf;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.report-title {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #0f766e;
+}
+
+.report-sub {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.report-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px dashed #ddd;
+}
+
+.report-label {
+    font-weight: 700;
+    color: #333;
+}
+
+.report-value {
+    color: #555;
+}
+
+.report-skills {
+    margin: 20px 0;
+}
+
+.skill-item {
+    margin-bottom: 10px;
+}
+
+.skill-name {
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.skill-bar-bg {
+    background: #e0e0e0;
+    border-radius: 10px;
+    height: 8px;
+    margin-top: 5px;
+    overflow: hidden;
+}
+
+.skill-bar-fill {
+    background: linear-gradient(90deg, #2dd4bf, #0d9488);
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.5s;
+}
+
+.report-footer {
+    text-align: center;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
+    font-size: 0.7rem;
+    color: #888;
+}
+
+.btn-print {
+    background: linear-gradient(135deg, #38bdf8, #0284c7);
+    border: none;
+    border-radius: 40px;
+    padding: 10px 20px;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    margin: 5px;
+    transition: all 0.2s;
+}
+
+.btn-print:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(56,189,248,0.3);
+}
+
+.btn-download {
+    background: linear-gradient(135deg, #34d399, #059669);
+    border: none;
+    border-radius: 40px;
+    padding: 10px 20px;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+    margin: 5px;
+    transition: all 0.2s;
+}
+
+.btn-download:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(52,211,153,0.3);
+}
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    .print-area, .print-area * {
+        visibility: visible;
+    }
+    .print-area {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        margin: 0;
+        padding: 20px;
+        background: white;
+    }
+    .no-print {
+        display: none;
+    }
+}
+/* Profile modal form styles - ensure inputs are visible */
+#profileEditFormModal input {
+    display: block;
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(45,212,191,0.3);
+    border-radius: var(--r2);
+    color: var(--t1);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+    outline: none;
+    transition: all 0.22s;
+}
+
+#profileEditFormModal input:focus {
+    border-color: var(--teal);
+    background: rgba(45,212,191,0.15);
+    box-shadow: 0 0 0 2px rgba(45,212,191,0.2);
+}
+
+#profileEditFormModal input::placeholder {
+    color: var(--t3);
+}
+ .back-link { position: fixed; bottom: 12px; left: 12px; z-index: 100; }
+        .back-link a { color: var(--text-primary); background: var(--bg-card); padding: 6px 12px; border-radius: 25px; font-size: 11px; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; border: var(--border-glow); }
+</style>
+</head>
+<body>
+
+    <!-- CYBERPUNK ACCESS UI - MOBILE OPTIMIZED + AUTO DISAPPEAR -->
+<div class="cyber-access-ui" id="cyberAccessUI">
+    <!-- Background Effects -->
+    <div class="cyber-bg-grid"></div>
+    <div class="cyber-scan-line"></div>
+    <div class="cyber-glitch-overlay"></div>
+    <div class="cyber-vignette"></div>
+    
+    <!-- Floating Particles -->
+    <div class="cyber-particles" id="cyberParticles"></div>
+    
+    <!-- Main Content -->
+    <div class="cyber-content">
+        <!-- HUD Rings -->
+        <div class="cyber-rings" id="cyberRings">
+            <div class="ring ring-outer"></div>
+            <div class="ring ring-mid"></div>
+            <div class="ring ring-inner"></div>
+            <div class="ring-core"></div>
+            <div class="ring-pulse"></div>
+        </div>
+        
+        <!-- Warning Bar Top -->
+        <div class="warning-bar" id="warningBar">
+            <div class="warning-text">⚠ SECURITY ALERT ⚠</div>
+            <div class="warning-light"></div>
+        </div>
+        
+        <!-- Main Message -->
+        <div class="cyber-message" id="cyberMessage">
+            <div class="msg-main" id="msgMain">SKILLNEST</div>
+            <div class="msg-sub" id="msgSub">SECURE CONNECTION ESTABLISHING...</div>
+        </div>
+        
+        <!-- Typing Effect Area -->
+        <div class="cyber-typing" id="cyberTyping">
+            <span id="typingOutput"></span>
+            <span class="typing-cursor"></span>
+        </div>
+        
+        <!-- Loading Section -->
+        <div class="cyber-loading">
+            <div class="loading-percent" id="loadingPercent">0%</div>
+            <div class="loading-bar-container">
+                <div class="loading-bar-fill" id="loadingFill"></div>
+            </div>
+            <div class="loading-steps">
+                <span id="step1">⟳ SECURITY</span>
+                <span id="step2">⟳ ENCRYPT</span>
+                <span id="step3">⟳ ACCESS</span>
+            </div>
+        </div>
+        
+        <!-- Status Indicators -->
+        <div class="cyber-status">
+            <div class="status-dot"></div>
+            <span>SECURE CHANNEL ACTIVE</span>
+            <div class="status-dot"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* ==================== CYBER ACCESS UI - MOBILE OPTIMIZED ==================== */
+.cyber-access-ui {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #0a0a0f;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Share Tech Mono', 'Space Grotesk', monospace;
+    overflow: hidden;
+    transition: opacity 0.8s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+}
+
+.cyber-access-ui.fade-out {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Grid Background */
+.cyber-bg-grid {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        repeating-linear-gradient(0deg, rgba(255, 0, 64, 0.03) 0px, rgba(255, 0, 64, 0.03) 1px, transparent 1px, transparent 30px),
+        repeating-linear-gradient(90deg, rgba(255, 0, 64, 0.03) 0px, rgba(255, 0, 64, 0.03) 1px, transparent 1px, transparent 30px);
+    animation: gridGlow 8s ease-in-out infinite;
+}
+
+@keyframes gridGlow {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.6; }
+}
+
+/* Scan Line */
+.cyber-scan-line {
+    position: absolute;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #ff0040, #ff6699, #ff0040, transparent);
+    top: 0;
+    animation: scanVertical 3s linear infinite;
+    opacity: 0.6;
+}
+
+@keyframes scanVertical {
+    0% { top: 0; opacity: 0; }
+    10% { opacity: 0.8; }
+    90% { opacity: 0.8; }
+    100% { top: 100%; opacity: 0; }
+}
+
+/* Glitch Overlay */
+.cyber-glitch-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(0deg, 
+        rgba(255, 0, 0, 0.03) 0px, 
+        rgba(255, 0, 0, 0.03) 3px, 
+        transparent 3px, 
+        transparent 6px);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.05s;
+}
+
+/* Vignette */
+.cyber-vignette {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.5) 100%);
+    pointer-events: none;
+}
+
+/* Particles */
+.cyber-particles {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.particle {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: #ff0040;
+    border-radius: 50%;
+    animation: particleFloat 3s linear infinite;
+}
+
+@keyframes particleFloat {
+    0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+    10% { opacity: 0.8; }
+    90% { opacity: 0.5; }
+    100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+}
+
+/* Main Content */
+.cyber-content {
+    position: relative;
+    z-index: 10;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    animation: contentEntrance 0.5s ease-out;
+}
+
+@keyframes contentEntrance {
+    from { opacity: 0; transform: scale(0.9) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* HUD Rings */
+.cyber-rings {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin: 0 auto 20px;
+}
+
+@media (min-width: 768px) {
+    .cyber-rings { width: 250px; height: 250px; margin: 0 auto 25px; }
+}
+
+.ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border-style: solid;
+    border-width: 2px;
+}
+
+.ring-outer {
+    width: 200px;
+    height: 200px;
+    border-color: rgba(255, 0, 64, 0.3);
+    border-top-color: #ff0040;
+    animation: rotateRing 6s linear infinite;
+}
+
+.ring-mid {
+    width: 150px;
+    height: 150px;
+    border-color: rgba(255, 0, 64, 0.25);
+    border-right-color: #ff3366;
+    animation: rotateRing 4s linear infinite reverse;
+}
+
+.ring-inner {
+    width: 100px;
+    height: 100px;
+    border-color: rgba(255, 0, 64, 0.2);
+    border-bottom-color: #ff6699;
+    animation: rotateRing 3s linear infinite;
+}
+
+.ring-core {
+    width: 30px;
+    height: 30px;
+    background: #ff0040;
+    border-radius: 50%;
+    box-shadow: 0 0 20px #ff0040, 0 0 40px rgba(255, 0, 64, 0.5);
+    animation: corePulse 1s ease-in-out infinite;
+}
+
+.ring-pulse {
+    width: 60px;
+    height: 60px;
+    border: 2px solid rgba(255, 0, 64, 0.5);
+    animation: ringPulse 1.5s ease-out infinite;
+}
+
+@keyframes rotateRing {
+    from { transform: translate(-50%, -50%) rotate(0deg); }
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes corePulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.7; }
+}
+
+@keyframes ringPulse {
+    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0.8; }
+    100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+}
+
+/* Speed Mode for Denied State */
+.cyber-rings.speed .ring-outer { animation-duration: 2s; }
+.cyber-rings.speed .ring-mid { animation-duration: 1.5s; }
+.cyber-rings.speed .ring-inner { animation-duration: 1s; }
+.cyber-rings.speed .ring-pulse { animation-duration: 0.5s; }
+.cyber-rings.speed .ring-core { animation-duration: 0.5s; }
+
+/* Warning Bar */
+.warning-bar {
+    background: rgba(255, 0, 0, 0.15);
+    border: 1px solid #ff0000;
+    border-radius: 20px;
+    padding: 6px 12px;
+    margin: 10px auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.65rem;
+    font-weight: bold;
+    letter-spacing: 2px;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.warning-bar.active {
+    opacity: 1;
+    animation: warningPulse 0.5s ease-in-out infinite;
+}
+
+.warning-text { color: #ff0000; }
+.warning-light {
+    width: 8px;
+    height: 8px;
+    background: #ff0000;
+    border-radius: 50%;
+    animation: blink 0.5s infinite;
+}
+
+@keyframes warningPulse {
+    0%, 100% { box-shadow: 0 0 5px #ff0000; }
+    50% { box-shadow: 0 0 20px #ff0000; background: rgba(255, 0, 0, 0.3); }
+}
+
+/* Messages */
+.cyber-message {
+    margin: 20px 0 15px;
+}
+
+.msg-main {
+    font-size: 1.6rem;
+    font-weight: 900;
+    letter-spacing: 3px;
+    background: linear-gradient(135deg, #ff0040, #ff6699);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 10px rgba(255, 0, 64, 0.3);
+    transition: all 0.3s ease;
+}
+
+@media (min-width: 768px) {
+    .msg-main { font-size: 2rem; letter-spacing: 4px; }
+}
+
+.msg-sub {
+    font-size: 0.65rem;
+    color: rgba(255, 51, 102, 0.6);
+    letter-spacing: 1px;
+    margin-top: 5px;
+}
+
+/* Typing Area */
+.cyber-typing {
+    background: rgba(0, 0, 0, 0.6);
+    border-left: 2px solid #ff0040;
+    padding: 12px 16px;
+    margin: 15px 0;
+    font-size: 0.75rem;
+    color: #ff6699;
+    font-family: 'Share Tech Mono', monospace;
+    text-align: left;
+    border-radius: 4px;
+}
+
+.typing-cursor {
+    display: inline-block;
+    width: 6px;
+    height: 12px;
+    background: #ff0040;
+    animation: blink 0.8s infinite;
+    margin-left: 4px;
+    vertical-align: middle;
+}
+
+/* Loading Section */
+.cyber-loading {
+    margin: 20px 0;
+}
+
+.loading-percent {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #ff0040;
+    text-shadow: 0 0 10px #ff0040;
+    font-family: 'Share Tech Mono', monospace;
+    letter-spacing: 2px;
+}
+
+.loading-bar-container {
+    background: rgba(255, 0, 64, 0.1);
+    border-radius: 10px;
+    height: 4px;
+    overflow: hidden;
+    margin: 10px 0;
+}
+
+.loading-bar-fill {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #ff0040, #ff6699);
+    border-radius: 10px;
+    transition: width 0.1s linear;
+    box-shadow: 0 0 5px #ff0040;
+}
+
+.loading-steps {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 10px;
+    font-size: 0.6rem;
+    font-family: 'Share Tech Mono', monospace;
+}
+
+.loading-steps span {
+    color: rgba(255, 51, 102, 0.4);
+    transition: all 0.3s ease;
+}
+
+.loading-steps span.active {
+    color: #ff6699;
+    text-shadow: 0 0 5px #ff0040;
+}
+
+/* Status */
+.cyber-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+    font-size: 0.6rem;
+    color: rgba(255, 51, 102, 0.5);
+    letter-spacing: 1px;
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+    background: #00ff88;
+    border-radius: 50%;
+    animation: blink 1s infinite;
+}
+
+/* Animations */
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+/* Glitch Animation */
+.glitch-animation {
+    animation: textGlitch 0.2s ease-in-out 0s 3;
+}
+
+@keyframes textGlitch {
+    0%, 100% { transform: skew(0deg); }
+    20% { transform: skew(2deg); text-shadow: -2px 0 #00ffff, 2px 0 #ff00ff; }
+    60% { transform: skew(-2deg); text-shadow: 2px 0 #00ffff, -2px 0 #ff00ff; }
+}
+
+/* Camera Shake */
+.camera-shake {
+    animation: shakeAnim 0.3s ease-in-out 0s 3;
+}
+
+@keyframes shakeAnim {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+}
+
+/* Energy Wave */
+.energy-wave {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: radial-gradient(circle, rgba(255, 0, 64, 0.6) 0%, transparent 70%);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    animation: waveExpand 0.6s ease-out forwards;
+    pointer-events: none;
+}
+
+@keyframes waveExpand {
+    0% { width: 0; height: 0; opacity: 0.8; }
+    100% { width: 400px; height: 400px; opacity: 0; }
+}
+
+/* Welcome Burst Particles */
+.welcome-particle {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: #ff6699;
+    border-radius: 50%;
+    animation: particleFly 0.6s ease-out forwards;
+}
+
+@keyframes particleFly {
+    0% { transform: translate(0, 0) scale(1); opacity: 1; }
+    100% { transform: translate(var(--tx, 80px), var(--ty, -80px)) scale(0); opacity: 0; }
+}
+</style>
+
+<script>
+// ==================== CYBER ACCESS UI - AUTO DISAPPEAR ====================
+(function() {
+    const overlay = document.getElementById('cyberAccessUI');
+    const ringsContainer = document.getElementById('cyberRings');
+    const msgMain = document.getElementById('msgMain');
+    const msgSub = document.getElementById('msgSub');
+    const typingOutput = document.getElementById('typingOutput');
+    const loadingPercent = document.getElementById('loadingPercent');
+    const loadingFill = document.getElementById('loadingFill');
+    const warningBar = document.getElementById('warningBar');
+    const step1 = document.getElementById('step1');
+    const step2 = document.getElementById('step2');
+    const step3 = document.getElementById('step3');
+    const glitchOverlay = document.querySelector('.cyber-glitch-overlay');
+    
+    let loadingValue = 0;
+    let stepIndex = 0;
+    let intervalRunning = true;
+    
+    // Typing messages
+    const messages = [
+        "> INITIALIZING SECURE KERNEL...",
+        "> ESTABLISHING ENCRYPTED CHANNEL...",
+        "> SCANNING USER CREDENTIALS..."
+    ];
+    
+    let msgIdx = 0, charIdx = 0;
+    
+    // Typing effect
+    function typeMessage() {
+        if (msgIdx >= messages.length) {
+            typingOutput.textContent = "✓ SYSTEM VERIFICATION COMPLETE";
+            document.querySelector('.typing-cursor')?.remove();
+            return;
+        }
+        
+        const currentMsg = messages[msgIdx];
+        if (charIdx <= currentMsg.length) {
+            typingOutput.textContent = currentMsg.substring(0, charIdx);
+            charIdx++;
+            setTimeout(typeMessage, 40);
+        } else {
+            msgIdx++;
+            charIdx = 0;
+            setTimeout(() => {
+                typingOutput.textContent = '';
+                typeMessage();
+            }, 400);
+        }
+    }
+    
+    // Update loading steps
+    function updateSteps(percent) {
+        if (percent >= 30 && stepIndex < 1) {
+            stepIndex = 1;
+            step1.classList.add('active');
+            step1.innerHTML = '✓ SECURITY';
+        }
+        if (percent >= 60 && stepIndex < 2) {
+            stepIndex = 2;
+            step2.classList.add('active');
+            step2.innerHTML = '✓ ENCRYPT';
+        }
+        if (percent >= 90 && stepIndex < 3) {
+            stepIndex = 3;
+            step3.classList.add('active');
+            step3.innerHTML = '✓ ACCESS';
+        }
+    }
+    
+    // Loading animation
+    function startLoading() {
+        const interval = setInterval(() => {
+            if (loadingValue < 100 && intervalRunning) {
+                loadingValue += Math.floor(Math.random() * 4) + 2;
+                if (loadingValue > 100) loadingValue = 100;
+                loadingPercent.textContent = loadingValue + '%';
+                if (loadingFill) loadingFill.style.width = loadingValue + '%';
+                updateSteps(loadingValue);
+            } else {
+                clearInterval(interval);
+            }
+        }, 60);
+        return interval;
+    }
+    
+    // Glitch effect
+    function triggerGlitch() {
+        glitchOverlay.style.opacity = '0.4';
+        msgMain.classList.add('glitch-animation');
+        setTimeout(() => {
+            glitchOverlay.style.opacity = '0';
+            msgMain.classList.remove('glitch-animation');
+        }, 200);
+    }
+    
+    // Camera shake
+    function cameraShake() {
+        overlay.classList.add('camera-shake');
+        setTimeout(() => overlay.classList.remove('camera-shake'), 300);
+    }
+    
+    // Particle burst on welcome
+    function createWelcomeParticles() {
+        const particlesContainer = document.getElementById('cyberParticles');
+        for (let i = 0; i < 40; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'welcome-particle';
+            const angle = Math.random() * Math.PI * 2;
+            const distance = 60 + Math.random() * 100;
+            const tx = Math.cos(angle) * distance;
+            const ty = Math.sin(angle) * distance;
+            particle.style.setProperty('--tx', tx + 'px');
+            particle.style.setProperty('--ty', ty + 'px');
+            particle.style.left = '50%';
+            particle.style.top = '50%';
+            particle.style.position = 'absolute';
+            particlesContainer.appendChild(particle);
+            setTimeout(() => particle.remove(), 600);
+        }
+    }
+    
+    // Energy wave effect
+    function createEnergyWave() {
+        const wave = document.createElement('div');
+        wave.className = 'energy-wave';
+        wave.style.position = 'absolute';
+        wave.style.top = '50%';
+        wave.style.left = '50%';
+        document.querySelector('.cyber-content').appendChild(wave);
+        setTimeout(() => wave.remove(), 600);
+    }
+    
+    // Phase 2: Access Denied
+    async function phase2_Denied() {
+        intervalRunning = false;
+        typingOutput.textContent = "⚠️ SkillNest Security ⚠️";
+        msgMain.textContent = "SYSTEM READY";
+        msgMain.style.background = "linear-gradient(135deg, #ff0000, #ff3366)";
+        msgMain.style.webkitBackgroundClip = "text";
+        msgSub.textContent = "STUDENT DATA ACCESS ";
+        ringsContainer.classList.add('speed');
+        warningBar.classList.add('active');
+        
+        // Multiple glitches
+        for (let i = 0; i < 4; i++) {
+            triggerGlitch();
+            await new Promise(r => setTimeout(r, 150));
+        }
+        
+        cameraShake();
+        loadingValue = 100;
+        loadingPercent.textContent = '100%';
+        if (loadingFill) loadingFill.style.width = '100%';
+        
+        await new Promise(r => setTimeout(r, 2200));
+        
+        phase3_Welcome();
+    }
+    
+    // Phase 3: Welcome Thuli
+    async function phase3_Welcome() {
+        ringsContainer.classList.remove('speed');
+        warningBar.classList.remove('active');
+        
+        msgMain.classList.add('glitch-animation');
+        await new Promise(r => setTimeout(r, 150));
+        
+        msgMain.textContent = "WELCOME";
+        msgMain.style.background = "linear-gradient(135deg, #ff3366, #ff99cc, #ffccdd)";
+        msgMain.style.webkitBackgroundClip = "text";
+        msgSub.textContent = "✓ PREMIUM ACCESS GRANTED ✓ AI ASSISTANT MODE ACTIVE";
+        
+        createWelcomeParticles();
+        createEnergyWave();
+        
+        typingOutput.textContent = "✓ ACCESS GRANTED ✓ PROFILE LOADED ✓";
+        
+        await new Promise(r => setTimeout(r, 800));
+        msgMain.classList.remove('glitch-animation');
+        
+        phase4_Ready();
+    }
+    
+    // Phase 4: System Ready & Auto Exit
+    function phase4_Ready() {
+        msgSub.textContent = " SYSTEM READY - REDIRECTING...";
+        loadingPercent.textContent = '100%';
+        if (loadingFill) loadingFill.style.width = '100%';
+        
+        // Auto fade out after 1.5 seconds
+        setTimeout(() => {
+            fadeOutAndShowLogin();
+        }, 1500);
+    }
+    
+    // Fade out and show login
+    function fadeOutAndShowLogin() {
+        createEnergyWave();
+        overlay.classList.add('fade-out');
+        
+        setTimeout(() => {
+            overlay.style.display = 'none';
+            // Show your existing login panel
+            const loginPanel = document.getElementById('loginPanel');
+            if (loginPanel) {
+                loginPanel.classList.remove('hidden-panel');
+                loginPanel.classList.add('show-panel');
+            }
+        }, 800);
+    }
+    
+    // Create floating particles
+    function createFloatingParticles() {
+        const container = document.getElementById('cyberParticles');
+        for (let i = 0; i < 30; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 5 + 's';
+            particle.style.animationDuration = (Math.random() * 3 + 2) + 's';
+            container.appendChild(particle);
+        }
+    }
+    
+    // Hide login panel initially
+    const loginPanel = document.getElementById('loginPanel');
+    if (loginPanel) {
+        loginPanel.classList.add('hidden-panel');
+        loginPanel.classList.remove('show-panel');
+    }
+    
+    // Start the sequence
+    createFloatingParticles();
+    typeMessage();
+    const loadingInterval = startLoading();
+    
+    // Timeout to start denied phase (4.5 seconds)
+    setTimeout(() => {
+        if (loadingInterval) clearInterval(loadingInterval);
+        loadingValue = 100;
+        loadingPercent.textContent = '100%';
+        if (loadingFill) loadingFill.style.width = '100%';
+        phase2_Denied();
+    }, 4800);
+})();
+</script>
+
+<div class="loader-overlay" id="loadingOverlay">
+  <div class="ld-ring"></div>
+  <div class="ld-txt">LOADING</div>
+</div>
+
+<button class="theme-fab" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i></button>
+
+
+<div class="wrap">
+
+  <!-- ════════ LOGIN ════════ -->
+  <div id="loginPanel" class="show-panel">
+    <div style="height:32px"></div>
+    <div class="login-shell">
+      <div class="ls-emblem">
+        <div class="ls-circle"><i class="fas fa-graduation-cap"></i></div>
+        <div class="ls-title">SkillNest</div>
+        <div class="ls-sub">SMART STUDENT PORTAL · SHEETS SYNC</div>
+      </div>
+
+      <div class="lf">
+        <label class="lf-label"><i class="fas fa-id-badge"></i>STUDENT ID</label>
+        <input type="text" id="loginId" class="lf-input" placeholder="Enter your Student ID" autocomplete="off">
+      </div>
+      <div class="lf">
+        <label class="lf-label"><i class="fas fa-lock"></i>PASSWORD</label>
+        <input type="password" id="loginPass" class="lf-input" placeholder="••••••••••">
+      </div>
+
+      <button id="doLoginBtn" class="btn-teal" style="margin-top:4px">
+        <i class="fas fa-arrow-right-to-bracket" style="margin-right:8px"></i>Login to Dashboard
+      </button>
+
+      <div class="btn-row">
+        <button id="forgotBtn" class="btn-ghost"><i class="fab fa-whatsapp"></i>Forgot</button>
+        <button id="joinRequestBtn" class="btn-ghost"><i class="fas fa-user-plus"></i>Join Class</button>
+      </div>
+
+      <div class="l-div"></div>
+      <button id="showRegFormBtn" class="btn-line">
+        <i class="fas fa-user-edit" style="margin-right:8px"></i>New Student? Register Here
+      </button>
+      <div id="loginMessage" class="login-message"></div>
+    </div>
+  </div>
+
+  <!-- ════════ REGISTRATION ════════ -->
+  <div id="selfRegPanel" class="hidden-panel">
+    <div style="height:20px"></div>
+    <div class="login-shell">
+      <div style="text-align:center;margin-bottom:20px">
+        <i class="fas fa-user-plus" style="font-size:2rem;color:var(--teal);display:block;margin-bottom:10px"></i>
+        <div class="sec-hd" style="justify-content:center;font-size:.75rem">REGISTRATION REQUEST</div>
+        <div style="font-size:.78rem;color:var(--t3)">Fill in your details below</div>
+      </div>
+      <form id="selfRegForm">
+        <input name="name" placeholder="Full Name *" required>
+        <select name="grade" required><option value="">Select Grade</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option>13</option></select>
+        <input name="phone" placeholder="Phone *" required>
+        <input name="email" placeholder="Email *" required>
+        <select name="gender" required><option>Male</option><option>Female</option></select>
+        <input name="birth" type="date" required>
+        <input name="address" placeholder="Address *" required>
+        <input name="parentInf" placeholder="Parent Info *" required>
+        <button type="submit" class="btn-teal" style="margin-bottom:10px"><i class="fas fa-paper-plane" style="margin-right:8px"></i>Submit Request</button>
+        <button type="button" id="backToLoginFromReg" class="btn-line">← Back to Login</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ════════ DASHBOARD ════════ -->
+  <div id="dashboardPanel" class="hidden-panel">
+
+    <!-- HEADER -->
+    <div class="hdr">
+      <div class="hdr-left">
+        <div class="logo-pill">
+          <div class="logo-dot"><i class="fas fa-graduation-cap"></i></div>
+          <div class="logo-name">SKILLNEST</div>
+        </div>
+      </div>
+      <div class="hdr-actions">
+        <div class="hbtn" id="logoutBtn" title="Logout"><i class="fas fa-sign-out-alt"></i></div>
+        <div class="hbtn" onclick="openProfileModal('view')" title="Profile"><i class="fas fa-user-circle"></i></div>
+      </div>
+    </div>
+
+    <!-- WELCOME -->
+    <div class="welcome-card">
+      <div class="wc-tag">// PORTAL ACTIVE</div>
+      <div class="wc-name">Welcome back,<br><span id="welcomeName">Student</span> 👋</div>
+      <div class="wc-sub" id="timeGreeting">Stay focused on your goals 🌟</div>
+      <div class="wc-clock">
+        <div class="wc-time" id="liveClock">00:00:00</div>
+        <div class="wc-date" id="liveDate">—</div>
+      </div>
+    </div>
+
+    <!-- STREAK -->
+    <div class="streak-card">
+      <div class="sk-em">🔥</div>
+      <div class="sk-main">
+        <div class="sk-val">7 Day Streak</div>
+        <div class="sk-sub">Keep up your learning momentum!</div>
+        <div class="sk-bar-wrap">
+          <div style="display:flex;justify-content:space-between;font-size:.6rem;color:var(--t3);margin-bottom:4px"><span>Weekly goal</span><span>70%</span></div>
+          <div class="sk-bar"><div class="sk-fill"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stat-strip">
+      <div class="stat-tile">
+        <div class="st-icon"><i class="fas fa-layer-group"></i></div>
+        <div class="st-val" id="profileGradeStat">—</div>
+        <div class="st-lbl">Grade</div>
+      </div>
+      <div class="stat-tile">
+        <div class="st-icon"><i class="fas fa-wifi"></i></div>
+        <div class="st-val" id="inClassStatus">—</div>
+        <div class="st-lbl">Today</div>
+      </div>
+      <div class="stat-tile">
+        <div class="st-icon"><i class="fas fa-history"></i></div>
+        <div class="st-val" id="lastAttendDate" style="font-size:.62rem">—</div>
+        <div class="st-lbl">Last Visit</div>
+      </div>
+    </div>
+
+    <!-- ALERT -->
+    <div class="pay-alert" id="paymentAlert">
+      <i class="fas fa-exclamation-triangle"></i>
+      <span id="paymentAlertMsg">Pending payment! Please pay before month end.</span>
+    </div>
+
+    <!-- HOME -->
+    <div id="homeCard" class="feature-card active">
+      <div class="gcard">
+        <div class="sec-hd"><div class="pip"></div><i class="fas fa-tasks"></i>UPCOMING ASSIGNMENTS</div>
+        <div id="assignmentsList"><div style="text-align:center;padding:20px;color:var(--t3);font-size:.84rem">Loading...</div></div>
+      </div>
+      <div class="gcard">
+        <div class="sec-hd"><div class="pip"></div><i class="fas fa-trophy"></i>ACHIEVEMENTS</div>
+        <div id="achievementsGrid" class="ach-grid"><div style="text-align:center;padding:20px;color:var(--t3);font-size:.84rem;grid-column:span 2">Loading...</div></div>
+      </div>
+    </div>
+
+    <!-- EXAM -->
+    <div id="examCard" class="feature-card gcard">
+      <div class="sec-hd"><div class="pip"></div><i class="fas fa-chart-pie"></i>EXAM &amp; SKILLS</div>
+      <select id="paperSelect" class="paper-sel"></select>
+      <div class="chart-wrap">
+        <canvas id="pieChartCanvas" width="170" height="170"></canvas>
+        <div class="chart-center">
+          <div class="ch-score" id="scoreDisplay">—</div>
+          <div class="ch-sub">/ 100</div>
+        </div>
+      </div>
+      <div id="skillBarsContainer"></div>
+    </div>
+
+    <!-- PAYMENT -->
+    <div id="paymentCard" class="feature-card">
+      <div class="fin-hero">
+        <div class="frow"><span class="frow-label"><i class="fas fa-user-graduate"></i>Student</span><span class="frow-val" id="financeStudentName">—</span></div>
+        <div class="frow"><span class="frow-label"><i class="fas fa-id-card"></i>Student ID</span><span class="frow-val" id="financeStudentId">—</span></div>
+        <div class="frow"><span class="frow-label"><i class="fas fa-wallet"></i>Total Paid</span><span class="frow-val ok" id="totalPaidAmountFinance">LKR 0</span></div>
+        <div class="frow"><span class="frow-label"><i class="fas fa-chart-line"></i>Advance</span><span class="frow-val ok" id="advanceBalance">LKR 0</span></div>
+        <div class="frow"><span class="frow-label"><i class="fas fa-exclamation-circle"></i>Due Amount</span><span class="frow-val bad" id="dueAmount">LKR 0</span></div>
+        <div class="acc-box">
+          <div class="acc-lbl"><i class="fas fa-credit-card" style="color:var(--green);margin-right:6px"></i>TEMPORARY ACCOUNT</div>
+          <div class="acc-num" id="tempAccountNumber">SKL-0000-2025</div>
+          <div class="acc-note">Use Student ID as payment reference</div>
+        </div>
+      </div>
+
+      <!-- progress -->
+      <div class="prog-card">
+        <div class="prog-hd">
+          <div class="prog-label">PAYMENT PROGRESS</div>
+          <div class="prog-pct" id="payProgressPct">0%</div>
+        </div>
+        <div class="prog-track"><div class="prog-fill" id="payProgressBar" style="width:0%"></div></div>
+        <div class="prog-foot">
+          <span>Jan</span><span id="payProgressLabel">0 / 12 months</span><span>Dec</span>
+        </div>
+      </div>
+
+      <!-- year summary -->
+      <div class="yr-card">
+        <div class="yr-hd">
+          <div class="yr-lbl"><i class="fas fa-calendar" style="margin-right:6px"></i>YEAR · <span id="selectedYear">2025</span></div>
+          <select id="yearSelect" class="yr-sel"></select>
+        </div>
+        <div class="yr-stats">
+          <div><div class="yr-sv" id="yearlyTotalExpected">LKR 0</div><div class="yr-sl">Expected</div></div>
+          <div><div class="yr-sv" id="yearlyTotalPaid">LKR 0</div><div class="yr-sl">Paid</div></div>
+          <div><div class="yr-sv" id="yearlyRemaining">LKR 0</div><div class="yr-sl">Remaining</div></div>
+        </div>
+      </div>
+
+      <!-- monthly list -->
+      <div class="gcard">
+        <div class="sec-hd"><div class="pip"></div><i class="fas fa-receipt"></i>MONTHLY FEE HISTORY</div>
+        <div id="paymentGridModern" class="month-list"></div>
+      </div>
+      <div id="paymentReceiptModern"></div>
+    </div>
+
+    <!-- CONTACT -->
+    <div id="contactCard" class="feature-card gcard">
+      <div class="sec-hd"><div class="pip"></div><i class="fas fa-headset"></i>SUPPORT &amp; CONTACT</div>
+      <div class="ct-item">
+        <div class="ct-ico" style="background:rgba(45,212,191,.1)"><i class="fas fa-chalkboard-user" style="color:var(--teal)"></i></div>
+        <div class="ct-info"><div class="ct-name">Ms. Madhavi Rathnayake</div><div class="ct-det">Class Teacher</div></div>
+      </div>
+      <a class="ct-item" href="tel:+94767899845">
+        <div class="ct-ico" style="background:rgba(56,189,248,.1)"><i class="fas fa-phone" style="color:#38bdf8"></i></div>
+        <div class="ct-info"><div class="ct-name">+94 76 789 9845</div><div class="ct-det">Tap to call</div></div>
+      </a>
+      <a class="ct-item" href="https://wa.me/94767899845" target="_blank">
+        <div class="ct-ico" style="background:rgba(37,211,102,.1)"><i class="fab fa-whatsapp" style="color:#25D366"></i></div>
+        <div class="ct-info"><div class="ct-name">WhatsApp Chat</div><div class="ct-det">Instant messaging</div></div>
+      </a>
+      <div class="ct-item">
+        <div class="ct-ico" style="background:rgba(244,114,182,.1)"><i class="fas fa-envelope" style="color:#f472b6"></i></div>
+        <div class="ct-info"><div class="ct-name">madhaviupeksha17@gmail.com</div><div class="ct-det">Email</div></div>
+      </div>
+      <div class="ct-item">
+        <div class="ct-ico" style="background:rgba(251,191,36,.1)"><i class="fas fa-map-marker-alt" style="color:#fbbf24"></i></div>
+        <div class="ct-info"><div class="ct-name">Salusala, Badulla</div><div class="ct-det">Location</div></div>
+      </div>
+      <div class="ct-item">
+        <div class="ct-ico" style="background:rgba(167,139,250,.1)"><i class="fas fa-clock" style="color:#a78bfa"></i></div>
+        <div class="ct-info"><div class="ct-name">Sat &amp; Sun · 8AM – 12PM</div><div class="ct-det">Class schedule</div></div>
+      </div>
+    </div>
+
+  </div><!-- /dashboard -->
+</div><!-- /wrap -->
+
+<!-- MODAL -->
+<div class="modal-overlay" id="profileModal">
+  <div class="modal-box" id="profileModalContent"></div>
+</div>
+<!-- PAYMENT RECEIPT MODAL -->
+<div id="receiptModal" class="receipt-modal">
+    <div class="receipt-modal-content">
+        <button class="receipt-modal-close" onclick="closeReceiptModal()">
+            <i class="fas fa-times"></i>
+        </button>
+        <div id="receiptModalIcon" class="receipt-modal-icon">
+            <i class="fas fa-check-circle" style="color: #34d399;"></i>
+        </div>
+        <div id="receiptModalTitle" class="receipt-modal-title">PAYMENT CONFIRMED</div>
+        <div id="receiptModalDetails" class="receipt-modal-details">
+            <p>Jan 2025 · LKR 1,000</p>
+        </div>
+        <button class="receipt-modal-btn" onclick="closeReceiptModal()">Close</button>
+    </div>
+</div>
+<div class="back-link"><a href="index.html"><i class="fas fa-arrow-left"></i> Back</a></div>
+<!-- BOTTOM NAV -->
+<nav class="bnav" id="bottomNav">
+  <button class="ni active" data-card="homeCard"><i class="fas fa-home"></i><span>Home</span></button>
+  <button class="ni" data-card="examCard"><i class="fas fa-chart-pie"></i><span>Exam</span></button>
+  <button class="ni" data-card="paymentCard"><i class="fas fa-wallet"></i><span>Pay</span></button>
+  <button class="ni" data-card="contactCard"><i class="fas fa-headset"></i><span>Help</span></button>
+  <button class="ni" onclick="openProfileModal('view')"><i class="fas fa-user-circle"></i><span>Me</span></button>
+</nav>
+
+<script>// OPTIMIZED JAVASCRIPT - FULL FEATURES + FAST LOAD
+// SkillNest Student Portal
+// ========================
+
+// ---------- GLOBALS ----------
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw3I82RoTAkKQSm7SU_vrRJmJKUOAYZAahd2MwTLwk-gFfVgqsPED2ZJ_-fPYuN21Z_/exec";
+let currentStudent = null;
+let pieChart = null;
+let currentPapers = [];
+let currentPaperIndex = 0;
+let currentYear = new Date().getFullYear();
+
+// ---------- FAST LOAD OPTIMIZATIONS ----------
+function showLoader(show, msg = 'Loading...') {
+    const loader = document.getElementById('loadingOverlay');
+    const txtEl = document.querySelector('.ld-txt');
+    if (loader) {
+        if (show) {
+            if (txtEl) txtEl.textContent = msg;
+            loader.style.display = 'flex';
+        } else {
+            loader.style.display = 'none';
+        }
+    }
+}
+
+function showToast(msg, isError = false) {
+    const toast = document.createElement('div');
+    toast.className = 'toast-msg';
+    toast.style.color = isError ? 'var(--red)' : 'var(--teal)';
+    toast.style.borderColor = isError ? 'rgba(248,113,113,0.35)' : 'var(--border2)';
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2800);
+}
+
+// ---------- OPTIMIZED API CALL (with persistent cache) ----------
+const cacheStore = new Map();
+const CACHE_TTL = 5 * 60 * 1000;
+
+async function apiCall(action, method = 'GET', payload = {}) {
+    const cacheKey = `${action}_${JSON.stringify(payload)}`;
+    
+    if (method === 'GET' && cacheStore.has(cacheKey)) {
+        const cached = cacheStore.get(cacheKey);
+        if (Date.now() - cached.timestamp < CACHE_TTL) {
+            return cached.data;
+        }
+    }
+
+    try {
+        const url = new URL(SCRIPT_URL);
+        let response;
+        
+        if (method === 'GET') {
+            url.searchParams.append('action', action);
+            Object.entries(payload).forEach(([k, v]) => {
+                if (v !== undefined && v !== null && v !== '') {
+                    url.searchParams.append(k, v);
+                }
+            });
+            response = await fetch(url, { method: 'GET', cache: 'force-cache' });
+        } else {
+            const formBody = new URLSearchParams();
+            formBody.append('action', action);
+            formBody.append('data', JSON.stringify(payload));
+            response = await fetch(SCRIPT_URL, { method: 'POST', body: formBody });
+        }
+        
+        const data = await response.json();
+        
+        if (method === 'GET' && data && !data.error) {
+            cacheStore.set(cacheKey, { data, timestamp: Date.now() });
+        }
+        
+        return data;
+    } catch (error) {
+        console.error(`API Error (${action}):`, error);
+        return { error: true, message: error.message };
+    }
+}
+
+// ---------- PARALLEL DASHBOARD FETCH (6 calls at once - FAST) ----------
+async function fetchAllDashboardData(studentId) {
+    showLoader(true, 'Loading your dashboard...');
+    
+    // ALL 6 API calls run in PARALLEL - much faster than sequential
+    const [attendanceRes, paymentsRes, examMarksRes, skillsRes, assignmentsRes, achievementsRes] = await Promise.all([
+        apiCall('getAttendance', 'GET', { id: studentId }),
+        apiCall('getPayments', 'GET', { id: studentId }),
+        apiCall('getExamMarks', 'GET', { id: studentId }),
+        apiCall('getSkill', 'GET', { id: studentId }),
+        apiCall('getAssignments', 'GET', { id: studentId }),
+        apiCall('getAchievements', 'GET', { id: studentId })
+    ]);
+    
+    return {
+        attendance: attendanceRes.success ? attendanceRes.data : [],
+        payments: paymentsRes.success ? paymentsRes.data : [],
+        exams: examMarksRes.success ? examMarksRes.data : [],
+        skills: skillsRes.success ? skillsRes.data : { grammar: 0, writing: 0, reading: 0, spoken: 0 },
+        assignments: assignmentsRes.success ? assignmentsRes.data : [],
+        achievements: achievementsRes.success ? achievementsRes.data : []
+    };
+}
+
+// ---------- CLOCK & GREETING ----------
+function tick() {
+    const now = new Date();
+    const clockEl = document.getElementById('liveClock');
+    const dateEl = document.getElementById('liveDate');
+    if (clockEl) {
+        clockEl.textContent = [now.getHours(), now.getMinutes(), now.getSeconds()]
+            .map(v => String(v).padStart(2, '0')).join(':');
+    }
+    if (dateEl) {
+        const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+        const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+        dateEl.textContent = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]}`;
+    }
+}
+setInterval(tick, 1000);
+tick();
+
+function updateGreetingTime() {
+    const hour = new Date().getHours();
+    let greeting = hour < 12 ? 'Good Morning ☀️' : (hour < 18 ? 'Good Afternoon 🌤' : 'Good Evening 🌙');
+    const greetEl = document.getElementById('timeGreeting');
+    if (greetEl) greetEl.textContent = greeting + ' · Keep learning!';
+}
+
+// ---------- THEME TOGGLE ----------
+let isDark = localStorage.getItem('skillnest_dark') !== 'light';
+function applyTheme() {
+    if (isDark) {
+        document.body.classList.remove('light-mode');
+        const icon = document.getElementById('themeIcon');
+        if (icon) icon.className = 'fas fa-moon';
+    } else {
+        document.body.classList.add('light-mode');
+        const icon = document.getElementById('themeIcon');
+        if (icon) icon.className = 'fas fa-sun';
+    }
+}
+applyTheme();
+const themeToggle = document.getElementById('themeToggle');
+if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+        isDark = !isDark;
+        localStorage.setItem('skillnest_dark', isDark ? 'dark' : 'light');
+        applyTheme();
+    });
+}
+
+// ---------- ESCAPE HTML ----------
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    if (typeof str !== 'string') str = String(str);
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+
+// ---------- RENDER ASSIGNMENTS ----------
+async function renderAssignments(assignmentsData) {
+    const container = document.getElementById('assignmentsList');
+    if (!container) return;
+    if (assignmentsData && assignmentsData.length) {
+        container.innerHTML = assignmentsData.map(a => `
+            <div class="asgn">
+                <div class="asgn-left"><i class="fas fa-file-alt"></i><span>${escapeHtml(a.title || 'Assignment')}</span></div>
+                <span class="badge ${(a.priority || 'low').toLowerCase()}">${(a.priority || 'Low').toUpperCase()}</span>
+            </div>
+        `).join('');
+    } else {
+        container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--t3);font-size:.84rem">📭 No upcoming assignments</div>';
+    }
+}
+
+// ---------- RENDER ACHIEVEMENTS ----------
+async function renderAchievements(achievementsData) {
+    const container = document.getElementById('achievementsGrid');
+    if (!container) return;
+    if (achievementsData && achievementsData.length) {
+        container.innerHTML = achievementsData.map(a => `
+            <div class="ach-tile">
+                <i class="${a.icon || 'fas fa-medal'}" style="color: ${a.color || '#fbbf24'}"></i>
+                <div class="an">${escapeHtml(a.name || 'Achievement')}</div>
+                <div class="ad">${escapeHtml(a.dateEarned || a.date || '')}</div>
+            </div>
+        `).join('');
+    } else {
+        container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--t3);font-size:.84rem;grid-column:span 2">🏆 Complete tasks to earn achievements!</div>';
+    }
+}
+
+// ---------- RENDER EXAM ANALYSIS ----------
+async function renderExamAnalysis(studentId) {
+    const [marksRes, skillsRes] = await Promise.all([
+        apiCall('getExamMarks', 'GET', { id: studentId }),
+        apiCall('getSkill', 'GET', { id: studentId })
+    ]);
+    
+    const marksData = marksRes.success ? marksRes.data : [];
+    const skillsData = skillsRes.success ? skillsRes.data : { grammar: 0, writing: 0, reading: 0, spoken: 0 };
+    
+    const paperMap = new Map();
+    marksData.forEach(m => {
+        let displayDate = m.date;
+        if (displayDate && displayDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            const parts = displayDate.split('-');
+            const d = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
+            d.setUTCDate(d.getUTCDate() + 1);
+            displayDate = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+        }
+        paperMap.set(m.date, { displayDate, mark: parseInt(m.mark) || 0 });
+    });
+    
+    currentPapers = Array.from(paperMap.entries()).map(([origDate, d]) => ({
+        paperName: `Exam · ${d.displayDate}`,
+        marks: d.mark,
+        skills: skillsData,
+        originalDate: origDate
+    }));
+    currentPapers.sort((a, b) => new Date(b.originalDate) - new Date(a.originalDate));
+    
+    const selectEl = document.getElementById('paperSelect');
+    if (selectEl) {
+        selectEl.innerHTML = currentPapers.length 
+            ? currentPapers.map((p, i) => `<option value="${i}">${p.paperName} (${p.marks}/100)</option>`).join('')
+            : '<option>No exams recorded</option>';
+        selectEl.onchange = (e) => { currentPaperIndex = parseInt(e.target.value); updateChart(); };
+    }
+    if (currentPapers.length) updateChart();
+}
+
+function updateChart() {
+    if (!currentPapers.length || !window.Chart) return;
+    const paper = currentPapers[currentPaperIndex];
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    if (scoreDisplay) scoreDisplay.textContent = paper.marks;
+    
+    const ctx = document.getElementById('pieChartCanvas')?.getContext('2d');
+    if (!ctx) return;
+    if (pieChart) pieChart.destroy();
+    const gradient = ctx.createLinearGradient(0, 0, 170, 0);
+    gradient.addColorStop(0, '#2dd4bf');
+    gradient.addColorStop(1, '#38bdf8');
+    pieChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Score', 'Remaining'],
+            datasets: [{ data: [paper.marks, 100 - paper.marks], backgroundColor: [gradient, 'rgba(255,255,255,0.04)'], borderWidth: 0, borderRadius: 3 }]
+        },
+        options: { cutout: '74%', plugins: { legend: { display: false } }, animation: { animateRotate: true, duration: 600 } }
+    });
+    
+    const container = document.getElementById('skillBarsContainer');
+    if (container) {
+        const colors = ['#2dd4bf', '#38bdf8', '#34d399', '#a78bfa'];
+        const skills = ['grammar', 'writing', 'reading', 'spoken'];
+        container.innerHTML = skills.map((s, i) => {
+            const val = paper.skills[s] || 0;
+            return `<div class="sk-row">
+                <span class="sk-name">${s}</span>
+                <div class="sk-track"><div class="sk-prog" style="width:${val}%;background:linear-gradient(90deg,${colors[i]},${colors[(i+1)%4]})"></div></div>
+                <span class="sk-pct">${val}%</span>
+            </div>`;
+        }).join('');
+    }
+}
+
+// ---------- RENDER PAYMENT MODERN ----------
+async function renderPaymentModern(studentId, year = currentYear) {
+    const paymentsRes = await apiCall('getPayments', 'GET', { id: studentId });
+    const allPayments = paymentsRes.success ? paymentsRes.data : [];
+    const paidMonths = allPayments.filter(p => parseInt(p.year) === year).map(p => p.month);
+    const paidSet = new Set(paidMonths);
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    const container = document.getElementById('paymentGridModern');
+    if (!container) return;
+    
+    const feePerMonth = 1000;
+    const totalPaid = paidMonths.length * feePerMonth;
+    
+    const currentDate = new Date();
+    const currentMonthIndex = currentDate.getMonth();
+    const currentYearActual = currentDate.getFullYear();
+    
+    let expectedMonths;
+    if (year === currentYearActual) {
+        expectedMonths = currentMonthIndex + 1;
+    } else if (year < currentYearActual) {
+        expectedMonths = 12;
+    } else {
+        expectedMonths = 0;
+    }
+    
+    const expectedSoFar = expectedMonths * feePerMonth;
+    const due = Math.max(0, expectedSoFar - totalPaid);
+    const advance = totalPaid > expectedSoFar ? totalPaid - expectedSoFar : 0;
+    const progressPercent = Math.round((paidMonths.length / 12) * 100);
+    
+    document.getElementById('totalPaidAmountFinance').innerHTML = `LKR ${totalPaid.toLocaleString()}`;
+    document.getElementById('advanceBalance').innerHTML = `LKR ${advance.toLocaleString()}`;
+    document.getElementById('dueAmount').innerHTML = `LKR ${due.toLocaleString()}`;
+    if (currentStudent) {
+        document.getElementById('financeStudentName').innerText = currentStudent.name || '—';
+        document.getElementById('financeStudentId').innerText = currentStudent.id || '—';
+        const accSpan = document.getElementById('tempAccountNumber');
+        if (accSpan) accSpan.innerText = `SKL-${currentStudent.id || '0000'}-${year}`;
+    }
+    document.getElementById('yearlyTotalExpected').innerHTML = `LKR ${(12 * feePerMonth).toLocaleString()}`;
+    document.getElementById('yearlyTotalPaid').innerHTML = `LKR ${totalPaid.toLocaleString()}`;
+    document.getElementById('yearlyRemaining').innerHTML = `LKR ${(12 * feePerMonth - totalPaid).toLocaleString()}`;
+    document.getElementById('selectedYear').innerText = year;
+    
+    const progBar = document.getElementById('payProgressBar');
+    if (progBar) progBar.style.width = `${progressPercent}%`;
+    const progPct = document.getElementById('payProgressPct');
+    if (progPct) progPct.textContent = `${progressPercent}%`;
+    const progLabel = document.getElementById('payProgressLabel');
+    if (progLabel) progLabel.textContent = `${paidMonths.length} / 12 months`;
+    
+    const isFutureYear = year > currentYearActual;
+    
+    container.innerHTML = months.map((m, index) => {
+        const isPaid = paidSet.has(m);
+        let isDisabled = false;
+        let disableReason = '';
+        
+        if (isFutureYear) {
+            isDisabled = true;
+            disableReason = 'Future year - not available yet';
+        } else if (year === currentYearActual && index > currentMonthIndex) {
+            isDisabled = true;
+            disableReason = 'Future month - not available yet';
+        }
+        
+        const isCurrentMonth = (year === currentYearActual && index === currentMonthIndex);
+        const monthDisplayName = isCurrentMonth ? `${m} (Current)` : m;
+        
+        return `<div class="m-row ${isDisabled ? 'future-month-disabled' : ''}" 
+                    data-month="${m}" 
+                    data-year="${year}" 
+                    data-paid="${isPaid}"
+                    data-disabled="${isDisabled}"
+                    data-reason="${disableReason}"
+                    style="${isDisabled ? 'opacity:0.5; cursor:not-allowed;' : ''}">
+            <div class="m-left">
+                <div class="m-dot ${isPaid ? 'paid' : 'due'}"></div>
+                <div>
+                    <div class="m-name">${monthDisplayName}</div>
+                    <div class="m-yr">${year}</div>
+                </div>
+            </div>
+            <div class="${isPaid ? 'paid-badge' : 'pending-badge'}">
+                ${isPaid ? 'PAID ✓' : (isDisabled ? 'LOCKED 🔒' : (isCurrentMonth ? 'CURRENT' : 'PENDING'))}
+            </div>
+        </div>`;
+    }).join('');
+    
+    document.querySelectorAll('.m-row').forEach(row => {
+        row.addEventListener('click', () => {
+            const isDisabled = row.dataset.disabled === 'true';
+            if (isDisabled) {
+                const reason = row.dataset.reason || 'This month is not available yet';
+                showToast(`🔒 ${reason}`, false);
+                return;
+            }
+            const month = row.dataset.month;
+            const yr = row.dataset.year;
+            const isPaid = row.dataset.paid === 'true';
+            showReceiptModal(isPaid, month, yr, 1000);
+        });
+    });
+}
+
+// ---------- DASHBOARD LOAD (ALL FUNCTIONS WORK) ----------
+async function loadDashboard(student) {
+    if (!student) return;
+    updateGreetingTime();
+    document.getElementById('profileGradeStat').innerText = `G${student.grade}`;
+    document.getElementById('welcomeName').innerText = student.name;
+    
+    // Fetch ALL data in parallel - FAST
+    const dashboardData = await fetchAllDashboardData(student.id);
+    
+    // Process attendance
+    const attendanceRecords = dashboardData.attendance || [];
+    const presentDates = attendanceRecords.filter(a => a.status === 'Present');
+    if (presentDates.length) {
+        let lastDate = presentDates[0].date;
+        if (lastDate && typeof lastDate === 'string' && lastDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            const parts = lastDate.split('-');
+            const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            d.setDate(d.getDate() + 1);
+            lastDate = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
+        document.getElementById('lastAttendDate').innerText = lastDate;
+    } else {
+        document.getElementById('lastAttendDate').innerText = 'None';
+    }
+    
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    const isPresentToday = presentDates.some(rec => {
+        let recDate = rec.date;
+        if (recDate && typeof recDate === 'string' && recDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            const parts = recDate.split('-');
+            const d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            d.setDate(d.getDate() + 1);
+            recDate = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
+        return recDate === todayStr;
+    });
+    document.getElementById('inClassStatus').innerHTML = isPresentToday 
+        ? '<span style="color:var(--green);font-size:.7rem">✅ Active</span>'
+        : '<span style="color:var(--red);font-size:.7rem">⏳ Away</span>';
+    
+    const currentMonthName = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][today.getMonth()];
+    const paymentsArr = dashboardData.payments || [];
+    const hasPaidCurrent = paymentsArr.some(p => p.month === currentMonthName && parseInt(p.year) === today.getFullYear());
+    const alertDiv = document.getElementById('paymentAlert');
+    if (alertDiv) alertDiv.classList.toggle('show', !hasPaidCurrent);
+    
+    // Render assignments and achievements (THEY WORK!)
+    await renderAssignments(dashboardData.assignments || []);
+    await renderAchievements(dashboardData.achievements || []);
+    
+    // Store exam & skills data for lazy loading
+    window.examMarksData = dashboardData.exams;
+    window.skillsData = dashboardData.skills;
+    window.examLoaded = false;
+    window.paymentLoaded = false;
+    
+    populateYearSelector();
+    showLoader(false);
+    showToast(`Welcome back, ${student.name}!`);
+}
+
+function populateYearSelector() {
+    const sel = document.getElementById('yearSelect');
+    if (!sel) return;
+    const nowYear = new Date().getFullYear();
+    sel.innerHTML = '';
+    for (let y = nowYear - 2; y <= nowYear + 2; y++) {
+        const opt = document.createElement('option');
+        opt.value = y;
+        opt.textContent = y;
+        if (y === nowYear) opt.selected = true;
+        sel.appendChild(opt);
+    }
+    sel.addEventListener('change', async (e) => {
+        currentYear = parseInt(e.target.value);
+        document.getElementById('selectedYear').innerText = currentYear;
+        if (currentStudent && window.paymentLoaded) {
+            await renderPaymentModern(currentStudent.id, currentYear);
+        }
+    });
+}
+
+// ---------- LOGIN ----------
+async function performLogin() {
+    const studentId = document.getElementById('loginId').value.trim();
+    const password = document.getElementById('loginPass').value.trim();
+    if (!studentId || !password) {
+        showToast('Please enter ID & password', true);
+        return;
+    }
+    showLoader(true, 'Logging in...');
+    const result = await apiCall('getStudentData', 'GET', { id: studentId });
+    if (result.success && result.data && String(result.data.password) === password) {
+        currentStudent = result.data;
+        await loadDashboard(currentStudent);
+        document.getElementById('loginPanel').classList.add('hidden-panel');
+        document.getElementById('selfRegPanel').classList.add('hidden-panel');
+        document.getElementById('dashboardPanel').classList.remove('hidden-panel');
+        document.getElementById('bottomNav').style.display = 'flex';
+        
+        window.examLoaded = false;
+        window.paymentLoaded = false;
+        document.querySelectorAll('.feature-card').forEach(c => c.style.display = 'none');
+        const homeCard = document.getElementById('homeCard');
+        if (homeCard) homeCard.style.display = 'block';
+        document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
+        const homeNav = document.querySelector('.ni[data-card="homeCard"]');
+        if (homeNav) homeNav.classList.add('active');
+        
+        document.getElementById('loginId').value = '';
+        document.getElementById('loginPass').value = '';
+    } else {
+        showLoader(false);
+        showToast('Invalid credentials', true);
+    }
+}
+
+// ---------- PROFILE MODAL (UPDATED WITH REFRESH) ----------
+function openProfileModal(mode) {
+    if (!currentStudent) return;
+    const modal = document.getElementById('profileModal');
+    const content = document.getElementById('profileModalContent');
+    if (!modal || !content) return;
+    
+    const safeName = escapeHtml(currentStudent.name);
+    const safeEmail = escapeHtml(currentStudent.email || '');
+    const safePhone = escapeHtml(currentStudent.phone || '');
+    const safeGrade = currentStudent.grade;
+    
+    if (mode === 'view') {
+        content.innerHTML = `
+            <div style="text-align:center;margin-bottom:18px">
+                <div class="pf-av"><i class="fas fa-user-graduate"></i></div>
+                <div style="font-family:'Nunito',sans-serif;font-size:1.1rem;font-weight:900;color:var(--teal)">${safeName}</div>
+                <div style="font-size:.75rem;color:var(--t3);margin-top:3px">Grade ${safeGrade}</div>
+                <div style="font-size:.72rem;color:var(--t3)">${safeEmail}</div>
+                <div style="font-size:.7rem;color:var(--t2);margin-top:5px">📞 ${safePhone}</div>
+            </div>
+            <div class="mnu" onclick="openProfileModal('edit')"><i class="fas fa-pen-to-square"></i>Edit Profile</div>
+            <div class="mnu" onclick="downloadExamReportCard()"><i class="fas fa-file-pdf"></i>Exam Report Card</div>
+            <div class="mnu" id="logoutFromModal"><i class="fas fa-power-off"></i>Logout</div>
+            <div class="mnu" onclick="closeProfileModal()"><i class="fas fa-xmark"></i>Close</div>
+        `;
+        const logoutBtnModal = document.getElementById('logoutFromModal');
+        if (logoutBtnModal) logoutBtnModal.addEventListener('click', () => {
+            document.getElementById('logoutBtn')?.click();
+            closeProfileModal();
+        });
+    } else {
+        content.innerHTML = `
+            <div style="font-size:.72rem;font-weight:700;color:var(--teal);letter-spacing:2px;margin-bottom:16px">✎ EDIT PROFILE</div>
+            <form id="profileEditFormModal">
+                <input id="editNameModal" value="${safeName}" placeholder="Full Name">
+                <input id="editPhoneModal" value="${safePhone}" placeholder="Phone Number">
+                <input id="editEmailModal" value="${safeEmail}" placeholder="Email Address">
+                <input id="editPasswordModal" type="password" placeholder="New Password (leave blank to keep current)">
+                <button type="submit" class="btn-teal" style="margin-bottom:10px"><i class="fas fa-save"></i> Save Changes</button>
+            </form>
+            <button class="btn-line" onclick="openProfileModal('view')">← Cancel</button>
+        `;
+        
+        const editForm = document.getElementById('profileEditFormModal');
+        if (editForm) {
+            editForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const newName = document.getElementById('editNameModal').value;
+                const newPhone = document.getElementById('editPhoneModal').value;
+                const newEmail = document.getElementById('editEmailModal').value;
+                const newPassword = document.getElementById('editPasswordModal').value;
+                
+                const updated = {
+                    id: currentStudent.id,
+                    name: newName,
+                    phone: newPhone,
+                    email: newEmail,
+                    address: currentStudent.address || '',
+                    password: newPassword || currentStudent.password
+                };
+                
+                showLoader(true, 'Updating profile...');
+                const res = await apiCall('updateStudentProfile', 'POST', updated);
+                
+                if (res.success) {
+                    // Clear cache for fresh data
+                    cacheStore.clear();
+                    
+                    // Refresh student data
+                    const refresh = await apiCall('getStudentData', 'GET', { id: currentStudent.id });
+                    if (refresh.success) {
+                        currentStudent = refresh.data;
+                        
+                        // Update all UI elements
+                        updateDisplayAfterEdit();
+                        
+                        showToast('Profile updated successfully!');
+                        openProfileModal('view');
+                    } else {
+                        showToast('Profile updated but refresh failed', true);
+                    }
+                } else {
+                    showToast(res.message || 'Update failed', true);
+                }
+                showLoader(false);
+            });
+        }
+    }
+    modal.style.display = 'flex';
+}
+
+// ---------- UPDATE DISPLAY AFTER PROFILE EDIT ----------
+function updateDisplayAfterEdit() {
+    if (!currentStudent) return;
+    
+    // Update welcome name
+    const welcomeNameEl = document.getElementById('welcomeName');
+    if (welcomeNameEl) welcomeNameEl.innerText = currentStudent.name;
+    
+    // Update grade stat
+    const gradeStatEl = document.getElementById('profileGradeStat');
+    if (gradeStatEl) gradeStatEl.innerText = `G${currentStudent.grade}`;
+    
+    // Update payment section
+    const financeNameEl = document.getElementById('financeStudentName');
+    if (financeNameEl) financeNameEl.innerText = currentStudent.name;
+    
+    const financeIdEl = document.getElementById('financeStudentId');
+    if (financeIdEl) financeIdEl.innerText = currentStudent.id;
+    
+    // Update temp account number
+    const tempAccountEl = document.getElementById('tempAccountNumber');
+    if (tempAccountEl) tempAccountEl.innerText = `SKL-${currentStudent.id}-${currentYear}`;
+    
+    // Refresh assignments and achievements
+    refreshAssignmentsAndAchievements();
+    
+    showToast('Dashboard updated with new information!');
+}
+
+// ---------- REFRESH ASSIGNMENTS & ACHIEVEMENTS ----------
+async function refreshAssignmentsAndAchievements() {
+    if (!currentStudent) return;
+    
+    const [assignmentsRes, achievementsRes] = await Promise.all([
+        apiCall('getAssignments', 'GET', { id: currentStudent.id }),
+        apiCall('getAchievements', 'GET', { id: currentStudent.id })
+    ]);
+    
+    if (assignmentsRes.success) renderAssignments(assignmentsRes.data);
+    if (achievementsRes.success) renderAchievements(achievementsRes.data);
+}
+
+function closeProfileModal() {
+    const modal = document.getElementById('profileModal');
+    if (modal) modal.style.display = 'none';
+}
+
+// ---------- UPDATE ALL DISPLAYED DATA AFTER PROFILE EDIT ----------
+function updateAllDisplayedData() {
+    if (!currentStudent) return;
+    
+    // Update welcome name
+    document.getElementById('welcomeName').innerText = currentStudent.name;
+    
+    // Update grade stat
+    document.getElementById('profileGradeStat').innerText = `G${currentStudent.grade}`;
+    
+    // Update payment section student name and ID
+    document.getElementById('financeStudentName').innerText = currentStudent.name;
+    document.getElementById('financeStudentId').innerText = currentStudent.id;
+    
+    // Update temp account number
+    const accSpan = document.getElementById('tempAccountNumber');
+    if (accSpan) accSpan.innerText = `SKL-${currentStudent.id}-${currentYear}`;
+    
+    // Clear and reload assignments and achievements (they might change)
+    loadAssignments(currentStudent.id);
+    loadAchievements(currentStudent.id);
+    
+    // If exam or payment tabs are loaded, refresh them
+    if (window.examLoaded) {
+        renderExamAnalysis(currentStudent.id);
+    }
+    if (window.paymentLoaded) {
+        renderPaymentModern(currentStudent.id, currentYear);
+    }
+    
+    // Show success toast
+    showToast('Dashboard updated with new profile data!');
+}
+
+// Keep these functions for assignments and achievements refresh
+async function loadAssignments(id) {
+    const res = await apiCall('getAssignments', 'GET', { id });
+    renderAssignments(res.success ? res.data : []);
+}
+
+async function loadAchievements(id) {
+    const res = await apiCall('getAchievements', 'GET', { id });
+    renderAchievements(res.success ? res.data : []);
+}
+
+// ---------- PAYMENT RECEIPT MODAL ----------
+function showReceiptModal(isPaid, month, year, amount = 1000) {
+    const modal = document.getElementById('receiptModal');
+    const iconEl = document.getElementById('receiptModalIcon');
+    const titleEl = document.getElementById('receiptModalTitle');
+    const detailsEl = document.getElementById('receiptModalDetails');
+    
+    if (isPaid) {
+        iconEl.innerHTML = '<i class="fas fa-check-circle" style="color: #34d399; font-size: 3rem;"></i>';
+        titleEl.innerHTML = 'PAYMENT CONFIRMED ✅';
+        titleEl.style.color = '#34d399';
+        detailsEl.innerHTML = `
+            <p style="margin: 8px 0;"><strong>${month} ${year}</strong></p>
+            <p style="font-size: 1.1rem; color: #34d399; font-weight: 700;">LKR ${amount.toLocaleString()}</p>
+            <p style="margin-top: 12px; font-size: 0.75rem;">Payment recorded successfully</p>
+        `;
+    } else {
+        iconEl.innerHTML = '<i class="fas fa-clock" style="color: #fbbf24; font-size: 3rem;"></i>';
+        titleEl.innerHTML = 'PAYMENT PENDING ⏳';
+        titleEl.style.color = '#fbbf24';
+        detailsEl.innerHTML = `
+            <p style="margin: 8px 0;"><strong>${month} ${year}</strong></p>
+            <p style="font-size: 1.1rem; color: #fbbf24; font-weight: 700;">LKR ${amount.toLocaleString()}</p>
+            <p class="pending-note" style="margin-top: 12px; font-size: 0.75rem; color: #f87171;">Please complete payment before month end</p>
+        `;
+    }
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeReceiptModal() {
+    const modal = document.getElementById('receiptModal');
+    modal.style.display = 'none';
+    document.body.style.overflow = '';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('receiptModal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) closeReceiptModal();
+        });
+    }
+});
+
+// ---------- EXAM REPORT CARD (WORKS!) ----------
+async function downloadExamReportCard() {
+    if (!currentStudent) {
+        showToast('No student data available', true);
+        return;
+    }
+    
+    showLoader(true, 'Generating report card...');
+    
+    const [marksRes, skillsRes] = await Promise.all([
+        apiCall('getExamMarks', 'GET', { id: currentStudent.id }),
+        apiCall('getSkill', 'GET', { id: currentStudent.id })
+    ]);
+    
+    const marksData = marksRes.success ? marksRes.data : [];
+    const skillsData = skillsRes.success ? skillsRes.data : { grammar: 0, writing: 0, reading: 0, spoken: 0 };
+    
+    let totalMarks = 0;
+    let examCount = 0;
+    const examList = [];
+    marksData.forEach(m => {
+        const mark = parseInt(m.mark) || 0;
+        totalMarks += mark;
+        examCount++;
+        examList.push({ date: m.date, mark: mark });
+    });
+    examList.sort((a, b) => b.date.localeCompare(a.date));
+    const averageMark = examCount > 0 ? Math.round(totalMarks / examCount) : 0;
+    
+    const today = new Date();
+    const reportHTML = `
+        <div class="report-card print-area">
+            <div class="report-header">
+                <div class="report-title">🎓 SKILLNEST English <br><h6>Madhavi Rathnayake</h6></div>
+                <div class="report-sub">Student Progress Report Card</div>
+                <div class="report-sub">Generated: ${today.toLocaleDateString()}</div>
+            </div>
+            <div class="report-row"><span class="report-label">Student Name:</span><span class="report-value">${escapeHtml(currentStudent.name)}</span></div>
+            <div class="report-row"><span class="report-label">Student ID:</span><span class="report-value">${escapeHtml(currentStudent.id)}</span></div>
+            <div class="report-row"><span class="report-label">Grade:</span><span class="report-value">${currentStudent.grade}</span></div>
+            <div class="report-row"><span class="report-label">Email:</span><span class="report-value">${escapeHtml(currentStudent.email || 'Not provided')}</span></div>
+            
+            <div style="margin: 20px 0;">
+                <div class="report-label" style="margin-bottom: 10px;">Exam Performance</div>
+                ${examList.length > 0 ? examList.slice(0, 5).map(e => `
+                    <div class="report-row" style="padding: 5px 0;">
+                        <span>${e.date}</span>
+                        <span style="font-weight: 700; color: ${e.mark >= 75 ? '#059669' : (e.mark >= 50 ? '#d97706' : '#dc2626')};">${e.mark}/100</span>
+                    </div>
+                `).join('') : '<div class="report-row">No exam records found</div>'}
+                <div class="report-row" style="margin-top: 10px; background: #f0fdf4;">
+                    <span class="report-label">Average Score:</span>
+                    <span class="report-value" style="font-weight: 800;">${averageMark}/100</span>
+                </div>
+            </div>
+            
+            <div class="report-skills">
+                <div class="report-label">Skill Assessment</div>
+                ${['grammar','writing','reading','spoken'].map(s => `
+                    <div class="skill-item">
+                        <div class="skill-name">${s.charAt(0).toUpperCase() + s.slice(1)}</div>
+                        <div class="skill-bar-bg"><div class="skill-bar-fill" style="width: ${skillsData[s] || 0}%"></div></div>
+                        <div style="font-size:0.7rem;text-align:right;">${skillsData[s] || 0}%</div>
+                    </div>
+                `).join('')}
+            </div>
+            <div class="report-footer">
+                <p>This is an electronically generated report card.</p>
+                <p>For queries, contact: +94 76 789 9845 | SkillNest (Teacher)</p>
+            </div>
+        </div>
+        <div style="text-align:center;margin-top:15px;" class="no-print">
+            <button class="btn-print" onclick="window.print();">Print</button>
+            <button class="btn-download" onclick="window.print();">Save as PDF</button>
+        </div>
+    `;
+    
+    const win = window.open('', '_blank');
+    win.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head><title>${currentStudent.name} - Report Card</title>
+        <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+        <style>
+            *{margin:0;padding:0;box-sizing:border-box;}
+            body{font-family:'Nunito',sans-serif;background:#f0f2f5;padding:30px;}
+            @media print{body{background:white;padding:0;}.no-print{display:none;}}
+            .report-card{background:white;border-radius:20px;padding:25px;max-width:800px;margin:0 auto;box-shadow:0 4px 20px rgba(0,0,0,0.1);}
+            .report-header{text-align:center;border-bottom:2px solid #2dd4bf;padding-bottom:15px;margin-bottom:20px;}
+            .report-title{font-size:1.5rem;font-weight:900;color:#0f766e;}
+            .report-sub{font-size:0.8rem;color:#666;}
+            .report-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed #ddd;}
+            .report-label{font-weight:700;color:#333;}
+            .report-value{color:#555;}
+            .report-skills{margin:20px 0;}
+            .skill-item{margin-bottom:10px;}
+            .skill-name{font-weight:600;font-size:0.85rem;}
+            .skill-bar-bg{background:#e0e0e0;border-radius:10px;height:8px;margin-top:5px;overflow:hidden;}
+            .skill-bar-fill{background:linear-gradient(90deg,#2dd4bf,#0d9488);height:100%;border-radius:10px;}
+            .report-footer{text-align:center;margin-top:20px;padding-top:15px;border-top:1px solid #ddd;font-size:0.7rem;color:#888;}
+            .btn-print,.btn-download{background:linear-gradient(135deg,#2dd4bf,#0d9488);border:none;border-radius:40px;padding:10px 20px;color:white;font-weight:700;cursor:pointer;margin:5px;}
+        </style>
+        </head>
+        <body>${reportHTML}</body>
+        </html>
+    `);
+    win.document.close();
+    showLoader(false);
+    showToast('Report card opened! Use Ctrl+P to print or save as PDF');
+}
+
+// ---------- LAZY LOADING FOR EXAM & PAYMENT ----------
+function initLazyLoading() {
+    const navItems = document.querySelectorAll('.ni[data-card]');
+    navItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const cardId = this.dataset.card;
+            const targetCard = document.getElementById(cardId);
+            if (!targetCard) return;
+            
+            document.querySelectorAll('.ni').forEach(n => n.classList.remove('active'));
+            this.classList.add('active');
+            document.querySelectorAll('.feature-card').forEach(c => c.style.display = 'none');
+            targetCard.style.display = 'block';
+            
+            if (cardId === 'examCard' && !window.examLoaded && currentStudent) {
+                window.examLoaded = true;
+                renderExamAnalysis(currentStudent.id);
+            }
+            if (cardId === 'paymentCard' && !window.paymentLoaded && currentStudent) {
+                window.paymentLoaded = true;
+                renderPaymentModern(currentStudent.id, currentYear);
+            }
+        });
+    });
+}
+
+// ---------- EVENT LISTENERS ----------
+document.addEventListener('DOMContentLoaded', () => {
+    // Login
+    const loginBtn = document.getElementById('doLoginBtn');
+    if (loginBtn) loginBtn.addEventListener('click', performLogin);
+    
+    const loginId = document.getElementById('loginId');
+    const loginPass = document.getElementById('loginPass');
+    if (loginId) loginId.addEventListener('keydown', e => { if (e.key === 'Enter') performLogin(); });
+    if (loginPass) loginPass.addEventListener('keydown', e => { if (e.key === 'Enter') performLogin(); });
+    
+    // Logout
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            currentStudent = null;
+            if (pieChart) pieChart.destroy();
+            document.getElementById('dashboardPanel').classList.add('hidden-panel');
+            document.getElementById('loginPanel').classList.remove('hidden-panel');
+            document.getElementById('bottomNav').style.display = 'none';
+            cacheStore.clear();
+            showToast('Logged out successfully');
+        });
+    }
+    
+    // Forgot & Join
+    const forgotBtn = document.getElementById('forgotBtn');
+    if (forgotBtn) {
+        forgotBtn.addEventListener('click', () => {
+            const id = document.getElementById('loginId').value.trim() || 'unknown';
+            window.open(`https://wa.me/94754551129?text=Password recovery for ID: ${id}`, '_blank');
+        });
+    }
+    
+    const joinBtn = document.getElementById('joinRequestBtn');
+    if (joinBtn) joinBtn.addEventListener('click', () => window.open('https://wa.me/94767899845?text=I would like to join your class', '_blank'));
+    
+    // Registration panel
+    const showReg = document.getElementById('showRegFormBtn');
+    if (showReg) {
+        showReg.addEventListener('click', () => {
+            document.getElementById('loginPanel').classList.add('hidden-panel');
+            document.getElementById('selfRegPanel').classList.remove('hidden-panel');
+        });
+    }
+    
+    const backToLogin = document.getElementById('backToLoginFromReg');
+    if (backToLogin) {
+        backToLogin.addEventListener('click', () => {
+            document.getElementById('selfRegPanel').classList.add('hidden-panel');
+            document.getElementById('loginPanel').classList.remove('hidden-panel');
+        });
+    }
+    
+    // Registration form submit
+    const regForm = document.getElementById('selfRegForm');
+    if (regForm) {
+        regForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(regForm);
+            const data = {};
+            formData.forEach((v, k) => data[k] = v);
+            showLoader(true, 'Submitting request...');
+            const res = await apiCall('pendingRegistration', 'POST', data);
+            showLoader(false);
+            if (res.success) {
+                showToast('Request submitted!');
+                regForm.reset();
+                document.getElementById('backToLoginFromReg').click();
+            } else {
+                showToast(res.message || 'Submission failed', true);
+            }
+        });
+    }
+    
+    // Close modals on outside click
+    const modalOverlay = document.getElementById('profileModal');
+    if (modalOverlay) {
+        modalOverlay.addEventListener('click', function(e) {
+            if (e.target === this) closeProfileModal();
+        });
+    }
+    
+    initLazyLoading();
+    showLoader(false);
+});
+
+</script>
+</body>
+</html>

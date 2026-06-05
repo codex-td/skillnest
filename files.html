@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>SkillNest · Download Resources</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg-deep: #0a0a1a;
+            --bg-card: rgba(15, 25, 35, 0.92);
+            --neon-purple: #a855f7;
+            --neon-pink: #ec4899;
+            --neon-teal: #00f2fe;
+            --neon-emerald: #00d26a;
+            --neon-orange: #f59e0b;
+            --text-primary: #ffffff;
+            --text-secondary: #b4c4e8;
+            --text-dim: #8899bb;
+            --border-glow: rgba(0, 242, 254, 0.25);
+            --radius-lg: 28px;
+            --radius-sm: 18px;
+            --font-family: 'Inter', sans-serif;
+        }
+        
+        body.light-mode {
+            --bg-deep: #f0f4fa;
+            --bg-card: rgba(255, 255, 255, 0.96);
+            --text-primary: #1a2a3a;
+            --text-secondary: #5a6e8a;
+            --text-dim: #7a8aa8;
+            --border-glow: rgba(0, 210, 106, 0.3);
+        }
+        
+        body {
+            font-family: var(--font-family);
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            min-height: 100vh;
+        }
+        
+        /* Animated Background */
+        .bg-animation { position: fixed; inset: 0; z-index: 0; overflow: hidden; }
+        .bg-circle { position: absolute; border-radius: 50%; filter: blur(100px); animation: float 20s infinite ease-in-out; }
+        .bg-circle:nth-child(1) { width: 500px; height: 500px; background: #a855f7; top: -200px; left: -150px; opacity: 0.15; }
+        .bg-circle:nth-child(2) { width: 400px; height: 400px; background: #ec4899; bottom: -100px; right: -100px; opacity: 0.12; animation-delay: -5s; }
+        .bg-circle:nth-child(3) { width: 350px; height: 350px; background: #00f2fe; top: 40%; left: 60%; opacity: 0.1; animation-delay: -10s; }
+        .bg-circle:nth-child(4) { width: 250px; height: 250px; background: #00d26a; bottom: 30%; left: 10%; opacity: 0.08; animation-delay: -15s; }
+        @keyframes float { 0%,100% { transform: translate(0,0) scale(1); } 33% { transform: translate(40px,-40px) scale(1.1); } 66% { transform: translate(-30px,30px) scale(0.9); } }
+        
+        .glass-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glow);
+            border-radius: var(--radius-lg);
+            transition: all 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+            transition: left 0.6s;
+        }
+        .glass-card:hover::before { left: 100%; }
+        .glass-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--neon-teal);
+            box-shadow: 0 0 40px rgba(0,242,254,0.15);
+        }
+        
+        .container { max-width: 1400px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 2; }
+        
+        /* Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 28px;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border-radius: 60px;
+            margin: 20px 0;
+            border: 1px solid var(--border-glow);
+        }
+        .logo {
+            font-size: 1.6rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a855f7, #ec4899, #00f2fe);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .nav-buttons { display: flex; gap: 15px; }
+        .btn-nav {
+            padding: 10px 24px;
+            border-radius: 40px;
+            background: linear-gradient(135deg, #a855f7, #ec4899);
+            color: rgb(255, 0, 149);
+            text-decoration: none;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+        .btn-nav:hover { transform: scale(1.05); }
+        .theme-btn {
+            background: rgba(0,242,254,0.15);
+            border: 1px solid var(--border-glow);
+            border-radius: 40px;
+            padding: 10px 20px;
+            cursor: pointer;
+            color: var(--text-primary);
+            transition: 0.3s;
+        }
+        .theme-btn:hover { border-color: var(--neon-teal); }
+        
+        /* Header */
+        .page-header { text-align: center; padding: 40px 0 20px; }
+        .page-header h1 {
+            font-size: 3rem;
+            background: linear-gradient(135deg, #fff, #00f2fe, #a855f7);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .page-header p { color: var(--text-secondary); margin-top: 15px; font-size: 1.1rem; }
+        
+        /* Search Bar */
+        .search-bar { margin: 30px 0; display: flex; justify-content: center; }
+        .search-input {
+            width: 100%;
+            max-width: 500px;
+            padding: 15px 25px;
+            border-radius: 60px;
+            border: 1px solid var(--border-glow);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-size: 1rem;
+            outline: none;
+            transition: 0.3s;
+        }
+        .search-input:focus { border-color: var(--neon-teal); box-shadow: 0 0 20px rgba(0,242,254,0.2); }
+        
+        /* Category Section */
+        .category-section { margin: 50px 0; }
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border-glow);
+        }
+        .category-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #a855f7, #ec4899);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        .category-title { font-size: 1.8rem; font-weight: 700; }
+        
+        /* Resource Grid */
+        .resources-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 28px;
+        }
+        
+        .resource-card {
+            padding: 25px;
+            border-radius: var(--radius-sm);
+            background: var(--bg-card);
+            border: 1px solid var(--border-glow);
+            transition: all 0.3s;
+        }
+        .resource-card:hover {
+            transform: translateY(-6px);
+            border-color: var(--neon-teal);
+        }
+        .card-icon { font-size: 2.5rem; margin-bottom: 15px; }
+        .card-icon i { background: linear-gradient(135deg, #a855f7, #00f2fe); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .card-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 8px; }
+        .card-desc { color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 12px; line-height: 1.4; }
+        .file-info {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+            padding: 8px 0;
+            border-top: 1px dashed var(--border-glow);
+            border-bottom: 1px dashed var(--border-glow);
+            font-size: 0.8rem;
+        }
+        .file-size { color: var(--neon-teal); }
+        .file-type { color: var(--neon-emerald); }
+        
+        .download-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #00d26a, #0ae0c0);
+            border: none;
+            border-radius: 50px;
+            color: #0a1a2a;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .download-btn:hover { transform: scale(1.02); gap: 15px; box-shadow: 0 5px 20px rgba(0,210,106,0.4); }
+        
+        /* File Selection Modal */
+        .file-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            backdrop-filter: blur(15px);
+            z-index: 20000;
+            justify-content: center;
+            align-items: center;
+        }
+        .file-modal-content {
+            width: 90%;
+            max-width: 550px;
+            max-height: 80vh;
+            background: var(--bg-card);
+            border-radius: 28px;
+            overflow: hidden;
+            border: 1px solid var(--neon-teal);
+            animation: modalPop 0.3s ease;
+        }
+        @keyframes modalPop {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .file-modal-header {
+            padding: 20px 25px;
+            background: linear-gradient(135deg, #a855f7, #ec4899);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .close-modal {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            color: white;
+            font-size: 1.2rem;
+        }
+        .file-list {
+            padding: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            margin-bottom: 12px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+        .file-item:hover {
+            background: rgba(0,242,254,0.15);
+            border-color: var(--neon-teal);
+            transform: translateX(5px);
+        }
+        .file-info-left { display: flex; align-items: center; gap: 15px; flex: 1; }
+        .file-icon { font-size: 1.8rem; color: var(--neon-pink); }
+        .file-details h4 { font-size: 1rem; margin-bottom: 5px; }
+        .file-details p { font-size: 0.7rem; opacity: 0.7; }
+        .file-select-btn {
+            background: linear-gradient(135deg, #00d26a, #0ae0c0);
+            border: none;
+            padding: 8px 18px;
+            border-radius: 40px;
+            color: #0a1a2a;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .file-select-btn:hover { transform: scale(1.05); }
+        
+        /* Toast Notification */
+        .toast-notification {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #00d26a, #0ae0c0);
+            color: #0a1a2a;
+            padding: 12px 24px;
+            border-radius: 50px;
+            z-index: 30000;
+            animation: slideInRight 0.3s ease;
+            font-weight: 600;
+        }
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        
+        footer {
+            background: var(--bg-card);
+            border-radius: 32px;
+            padding: 40px;
+            margin: 60px 0 30px;
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .resources-grid { grid-template-columns: 1fr; }
+            .page-header h1 { font-size: 2rem; }
+            .navbar { flex-direction: column; gap: 15px; }
+            .category-title { font-size: 1.4rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="bg-animation">
+    <div class="bg-circle"></div>
+    <div class="bg-circle"></div>
+    <div class="bg-circle"></div>
+    <div class="bg-circle"></div>
+</div>
+
+<div class="container">
+    <div class="navbar">
+        <a href="index.html" class="logo"><i class="fas fa-graduation-cap"></i> SkillNest</a>
+        <div class="nav-buttons">
+            <a href="index.html" class="btn-nav" style="background: transparent; border: 1px solid var(--border-glow);"><i class="fas fa-home"></i> Home</a>
+            <button class="theme-btn" id="themeToggle"><i class="fas fa-moon" id="themeIcon"></i> Mode</button>
+        </div>
+    </div>
+    
+    <div class="page-header">
+        <h1><i class="fas fa-download"></i> Resource Center</h1>
+        <p>Click on any download button to select your file from the list</p>
+    </div>
+    
+    <!-- Search Bar -->
+    <div class="search-bar">
+        <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search resources... (Syllabus, Past Paper, E-Book...)">
+    </div>
+    
+    <!-- ==================== PAST PAPERS SECTION ==================== -->
+    <div class="category-section">
+        <div class="category-header">
+            <div class="category-icon"><i class="fas fa-file-alt"></i></div>
+            <div class="category-title">📝 Past Papers & Worksheets</div>
+        </div>
+        <div class="resources-grid">
+            <div class="resource-card" data-name="o/l past papers ol ordinary level exam">
+                <div class="card-icon"><i class="fas fa-file-pdf"></i></div>
+                <div class="card-title">📘 O/L Past Papers (2020-2025)</div>
+                <div class="card-desc">Complete collection of O/L English past papers with answer keys. 12 papers available.</div>
+                <div class="file-info">
+                    <span class="file-type"><i class="fas fa-file-pdf"></i> 12 PDF Files</span>
+                    <span class="file-size"><i class="fas fa-google-drive"></i> Google Drive</span>
+                </div>
+                <button class="download-btn" onclick="showFileList('ol')"><i class="fas fa-folder-open"></i> Select & Download</button>
+            </div>
+            
+            <div class="resource-card" data-name="a/l past papers al advanced level">
+                <div class="card-icon"><i class="fas fa-tasks"></i></div>
+                <div class="card-title">📗 A/L Past Papers</div>
+                <div class="card-desc">General English past papers for Advanced Level. Complete with marking schemes.</div>
+                <div class="file-info">
+                    <span class="file-type"><i class="fas fa-file-pdf"></i> 8 PDF Files</span>
+                    <span class="file-size"><i class="fas fa-google-drive"></i> Google Drive</span>
+                </div>
+                <button class="download-btn" onclick="showFileList('al')"><i class="fas fa-folder-open"></i> Select & Download</button>
+            </div>
+            
+            <div class="resource-card" data-name="grade 5 scholarship english model paper">
+                <div class="card-icon"><i class="fas fa-star"></i></div>
+                <div class="card-title">⭐ Grade 5 Scholarship English</div>
+                <div class="card-desc">Model papers and worksheets for Grade 5 Scholarship exam preparation.</div>
+                <div class="file-info">
+                    <span class="file-type"><i class="fas fa-file-pdf"></i> 6 PDF Files</span>
+                    <span class="file-size"><i class="fas fa-google-drive"></i> Google Drive</span>
+                </div>
+                <button class="download-btn" onclick="showFileList('grade5')"><i class="fas fa-folder-open"></i> Select & Download</button>
+            </div>
+            
+            <div class="resource-card" data-name="model papers 2026 sample papers">
+                <div class="card-icon"><i class="fas fa-calendar-alt"></i></div>
+                <div class="card-title">📅 Model Papers 2026</div>
+                <div class="card-desc">New model papers for upcoming exams. Based on latest syllabus changes.</div>
+                <div class="file-info">
+                    <span class="file-type"><i class="fas fa-file-pdf"></i> 5 PDF Files</span>
+                    <span class="file-size"><i class="fas fa-google-drive"></i> Google Drive</span>
+                </div>
+                <button class="download-btn" onclick="showFileList('model')"><i class="fas fa-folder-open"></i> Select & Download</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ==================== SYLLABUS SECTION ==================== -->
+    <div class="category-section">
+        <div class="category-header">
+            <div class="category-icon"><i class="fas fa-graduation-cap"></i></div>
+            <div class="category-title">📚 Syllabus 2026</div>
+        </div>
+        <div class="resources-grid">
+            <div class="resource-card" data-name="grade 1-5 syllabus primary">
+                <div class="card-icon"><i class="fas fa-graduation-cap"></i></div>
+                <div class="card-title">Grade 1-5 Syllabus</div>
+                <div class="card-desc">Complete curriculum for primary level students. Grammar, vocabulary, writing basics.</div>
+                <div class="file-info"><span class="file-type">PDF</span><span class="file-size">Google Drive</span></div>
+                <button class="download-btn" onclick="showFileList('syllabus_grade1_5')"><i class="fas fa-folder-open"></i> Select & Download</button>
+            </div>
+            <div class="resource-card" data-name="grade 6-9 syllabus foundation">
+                <div class="card-icon"><i class="fas fa-book"></i></div>
+                <div class="card-title">Grade 6-9 Syllabus</div>
+                <div class="card-desc">Foundation level syllabus with grammar focus, reading comprehension, writing skills.</div>
+                <div class="file-info"><span class="file-type">PDF</span><span class="file-size">Google Drive</span></div>
+                <button class="download-btn" onclick="showFileList('syllabus_grade6_9')"><i class="fas fa-folder-open"></i> Select & Download</button>
+            </div>
+            <div class="resource-card" data-name="o/l syllabus ordinary level">
+                <div class="card-icon"><i class="fas fa-chalkboard"></i></div>
+                <div class="card-title">O/L English Syllabus</div>
+                <div class="card-desc">Exam-focused syllabus for Ordinary Level. Past paper structures, essay guidelines.</div>
+                <div class="file-info"><span class="file-type">PDF</span><span class="file-size">Google Drive</span></div>
+                <button class="download-btn" onclick="showFileList('syllabus_ol')"><i class="fas fa-folder-open"></i> Select & Download</button>
+            </div>
+            <div class="resource-card" data-name="a/l syllabus advanced level">
+                <div class="card-icon"><i class="fas fa-university"></i></div>
+                <div class="card-title">A/L General English</div>
+                <div class="card-desc">Advanced level syllabus for General English. Literature analysis, critical writing.</div>
+                <div class="file-info"><span class="file-type">PDF</span><span class="file-size">Google Drive</span></div>
+                <button class="download-btn" onclick="showFileList('syllabus_al')"><i class="fas fa-folder-open"></i> Select & Download</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ==================== E-BOOKS SECTION ==================== -->
+    <div class="category-section">
+        <div class="category-header">
+            <div class="category-icon"><i class="fas fa-book-open"></i></div>
+            <div class="category-title">📖 E-Books Library</div>
+        </div>
+        <div class="resources-grid">
+            <div class="resource-card" data-name="english grammar guide book">
+                <div class="card-icon"><i class="fas fa-book"></i></div>
+                <div class="card-title">English Grammar Guide</div>
+                <div class="card-desc">Complete grammar reference with examples and exercises. Tenses, parts of speech.</div>
+                <div class="file-info"><span class="file-type">PDF</span><span class="file-size">Google Drive</span></div>
+                <button class="download-btn" onclick="showFileList('ebook_grammar')"><i class="fas fa-folder-open"></i> Select & Download</button>
+            </div>
+            <div class="resource-card" data-name="spoken english handbook speaking">
+                <div class="card-icon"><i class="fas fa-language"></i></div>
+                <div class="card-title">Spoken English Handbook</div>
+                <div class="card-desc">Conversation practice, pronunciation tips, daily dialogues, real-life communication.</div>
+                <div class="file-info"><span class="file-type">PDF</span><span class="file-size">Google Drive</span></div>
+                <button class="download-btn" onclick="showFileList('ebook_spoken')"><i class="fas fa-folder-open"></i> Select & Download</button>
+            </div>
+            <div class="resource-card" data-name="essay writing guide">
+                <div class="card-icon"><i class="fas fa-pen-fancy"></i></div>
+                <div class="card-title">Essay Writing Guide</div>
+                <div class="card-desc">Structure, formats, sample essays for O/L and A/L. Descriptive, argumentative essays.</div>
+                <div class="file-info"><span class="file-type">PDF</span><span class="file-size">Google Drive</span></div>
+                <button class="download-btn" onclick="showFileList('ebook_essay')"><i class="fas fa-folder-open"></i> Select & Download</button>
+            </div>
+            <div class="resource-card" data-name="vocabulary builder word power">
+                <div class="card-icon"><i class="fas fa-spell-check"></i></div>
+                <div class="card-title">Vocabulary Builder</div>
+                <div class="card-desc">5000+ essential English words with meanings, synonyms, antonyms, and examples.</div>
+                <div class="file-info"><span class="file-type">PDF</span><span class="file-size">Google Drive</span></div>
+                <button class="download-btn" onclick="showFileList('ebook_vocabulary')"><i class="fas fa-folder-open"></i> Select & Download</button>
+            </div>
+        </div>
+    </div>
+    
+    <footer class="glass-card">
+        <p><i class="fas fa-graduation-cap"></i> All rights reserved</p>
+        <p style="font-size: 0.8rem; margin-top: 15px;">© 2026 SkillNest English — Madhavi Rathnayake <br>Developed by Thuli</p>
+    </footer>
+</div>
+
+<!-- File Selection Modal -->
+<div id="fileModal" class="file-modal">
+    <div class="file-modal-content">
+        <div class="file-modal-header">
+            <h3><i class="fas fa-folder-open"></i> <span id="modalTitle">Select a file to download</span></h3>
+            <button class="close-modal" onclick="closeFileModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="file-list" id="fileListContainer"></div>
+    </div>
+</div>
+
+<script>
+    // Theme Toggle
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    if(localStorage.getItem('skillnest_theme') === 'light') {
+        document.body.classList.add('light-mode');
+        themeIcon.className = 'fas fa-sun';
+    }
+    themeToggle.addEventListener('click', () => {
+        document.body.classList.toggle('light-mode');
+        const isLight = document.body.classList.contains('light-mode');
+        themeIcon.className = isLight ? 'fas fa-sun' : 'fas fa-moon';
+        localStorage.setItem('skillnest_theme', isLight ? 'light' : 'dark');
+    });
+    
+    // ==================== COMPLETE FILE DATABASE (All buttons now show file list) ====================
+    // IMPORTANT: Replace these Google Drive file IDs with your actual file IDs
+    // How to get: Upload PDF to Google Drive → Share → Copy FILE_ID from URL
+    
+    const fileDatabase = {
+        // Past Papers
+        ol: {
+            title: "📘 O/L Past Papers (2020-2025)",
+            files: [
+                { name: "2020 O/L English Paper", fileId: "1B3fi_Rtr2cy2xoAi-G9wfHPjO3y6e8M1" },
+                { name: "2021 O/L English Paper", fileId: "1kyc6T7Vh78ph6b1rj1xAp4m1efdz_O4Y" },
+                { name: "2022 O/L English Paper", fileId: "168HvKC3R3jPHIEEV58vyOpJg6w4xsMe2" },
+                { name: "2023 O/L English Paper", fileId: "1lriM4w8cvfpyjTFfMX_sajuKLntgxP0J" },
+                { name: "2024 O/L English Paper", fileId: "1HwPrnq8SpbbqziGR2_Nu_dss-ZDVitzT" },
+                { name: "2025 O/L English Paper", fileId: "18AkWHJB5fnNPu263WkauSqqmQFpy0TNn" },
+            ]
+        },
+        al: {
+            title: "📗 A/L Past Papers",
+            files: [
+                { name: "2020 A/L General English", fileId: "YOUR_GOOGLE_DRIVE_ID_2020_AL" },
+                { name: "2021 A/L General English", fileId: "YOUR_GOOGLE_DRIVE_ID_2021_AL" },
+                { name: "2022 A/L General English", fileId: "YOUR_GOOGLE_DRIVE_ID_2022_AL" },
+                { name: "2023 A/L General English", fileId: "YOUR_GOOGLE_DRIVE_ID_2023_AL" },
+                { name: "2024 A/L General English", fileId: "YOUR_GOOGLE_DRIVE_ID_2024_AL" },
+                { name: "Marking Scheme", fileId: "YOUR_GOOGLE_DRIVE_ID_AL_MARKING" }
+            ]
+        },
+        grade5: {
+            title: "⭐ Grade 5 Scholarship English",
+            files: [
+                { name: "Model Paper 01", fileId: "YOUR_GOOGLE_DRIVE_ID_G5_01" },
+                { name: "Model Paper 02", fileId: "YOUR_GOOGLE_DRIVE_ID_G5_02" },
+                { name: "Model Paper 03", fileId: "YOUR_GOOGLE_DRIVE_ID_G5_03" },
+                { name: "Grammar Worksheet", fileId: "YOUR_GOOGLE_DRIVE_ID_G5_GRAMMAR" },
+                { name: "Vocabulary Worksheet", fileId: "YOUR_GOOGLE_DRIVE_ID_G5_VOCAB" },
+                { name: "Answer Key", fileId: "YOUR_GOOGLE_DRIVE_ID_G5_ANSWER" }
+            ]
+        },
+        model: {
+            title: "📅 Model Papers 2026",
+            files: [
+                { name: "Model Paper - Term 01", fileId: "YOUR_GOOGLE_DRIVE_ID_MODEL_T01" },
+                { name: "Model Paper - Term 02", fileId: "YOUR_GOOGLE_DRIVE_ID_MODEL_T02" },
+                { name: "Model Paper - Term 03", fileId: "YOUR_GOOGLE_DRIVE_ID_MODEL_T03" },
+                { name: "Sample Paper - O/L Style", fileId: "YOUR_GOOGLE_DRIVE_ID_MODEL_OL" },
+                { name: "Sample Paper - A/L Style", fileId: "YOUR_GOOGLE_DRIVE_ID_MODEL_AL" }
+            ]
+        },
+        // Syllabus
+        syllabus_grade1_5: {
+            title: "📚 Grade 1-5 Syllabus",
+            files: [
+                { name: "Grade 1 English Syllabus", fileId: "YOUR_GOOGLE_DRIVE_ID_G1_SYL" },
+                { name: "Grade 2 English Syllabus", fileId: "YOUR_GOOGLE_DRIVE_ID_G2_SYL" },
+                { name: "Grade 3 English Syllabus", fileId: "1JOZkgXoNXmQUBZLsMAMYwgjiZea7v5CI" },
+                { name: "Grade 4 English Syllabus", fileId: "YOUR_GOOGLE_DRIVE_ID_G4_SYL" },
+                { name: "Grade 5 English Syllabus", fileId: "YOUR_GOOGLE_DRIVE_ID_G5_SYL" }
+            ]
+        },
+        syllabus_grade6_9: {
+            title: "📚 Grade 6-9 Syllabus",
+            files: [
+                { name: "Grade 6 English Syllabus", fileId: "YOUR_GOOGLE_DRIVE_ID_G6_SYL" },
+                { name: "Grade 7 English Syllabus", fileId: "YOUR_GOOGLE_DRIVE_ID_G7_SYL" },
+                { name: "Grade 8 English Syllabus", fileId: "YOUR_GOOGLE_DRIVE_ID_G8_SYL" },
+                { name: "Grade 9 English Syllabus", fileId: "YOUR_GOOGLE_DRIVE_ID_G9_SYL" }
+            ]
+        },
+        syllabus_ol: {
+            title: "📚 O/L English Syllabus",
+            files: [
+                { name: "O/L English Syllabus - Main", fileId: "YOUR_GOOGLE_DRIVE_ID_OL_SYL" },
+                { name: "O/L English Syllabus - Supplementary", fileId: "YOUR_GOOGLE_DRIVE_ID_OL_SYL_SUP" }
+            ]
+        },
+        syllabus_al: {
+            title: "📚 A/L General English Syllabus",
+            files: [
+                { name: "A/L General English Syllabus", fileId: "YOUR_GOOGLE_DRIVE_ID_AL_SYL" },
+                { name: "A/L Literature Guide", fileId: "YOUR_GOOGLE_DRIVE_ID_AL_LIT" }
+            ]
+        },
+        // E-Books
+        ebook_grammar: {
+            title: "📖 English Grammar Guide",
+            files: [
+                { name: "Complete Grammar Guide", fileId: "YOUR_GOOGLE_DRIVE_ID_GRAMMAR" },
+                { name: "Grammar Exercises Book", fileId: "YOUR_GOOGLE_DRIVE_ID_GRAMMAR_EX" },
+                { name: "Quick Grammar Reference", fileId: "YOUR_GOOGLE_DRIVE_ID_GRAMMAR_QR" }
+            ]
+        },
+        ebook_spoken: {
+            title: "📖 Spoken English Handbook",
+            files: [
+                { name: "Spoken English - Beginner", fileId: "YOUR_GOOGLE_DRIVE_ID_SPOKEN_BEG" },
+                { name: "Spoken English - Intermediate", fileId: "YOUR_GOOGLE_DRIVE_ID_SPOKEN_INT" },
+                { name: "Daily Conversation Guide", fileId: "YOUR_GOOGLE_DRIVE_ID_SPOKEN_DAILY" }
+            ]
+        },
+        ebook_essay: {
+            title: "📖 Essay Writing Guide",
+            files: [
+                { name: "Essay Writing - Basic", fileId: "YOUR_GOOGLE_DRIVE_ID_ESSAY_BASIC" },
+                { name: "Essay Writing - Advanced", fileId: "YOUR_GOOGLE_DRIVE_ID_ESSAY_ADV" },
+                { name: "Sample Essays Collection", fileId: "YOUR_GOOGLE_DRIVE_ID_ESSAY_SAMPLES" }
+            ]
+        },
+        ebook_vocabulary: {
+            title: "📖 Vocabulary Builder",
+            files: [
+                { name: "5000 Essential Words", fileId: "YOUR_GOOGLE_DRIVE_ID_VOCAB_5000" },
+                { name: "Advanced Vocabulary", fileId: "YOUR_GOOGLE_DRIVE_ID_VOCAB_ADV" },
+                { name: "Idioms & Phrases", fileId: "YOUR_GOOGLE_DRIVE_ID_VOCAB_IDIOMS" }
+            ]
+        }
+    };
+    
+    // Show file selection modal for any category
+    function showFileList(category) {
+        const data = fileDatabase[category];
+        if(!data) {
+            showToast(`⚠️ No files configured for this category yet`, true);
+            return;
+        }
+        
+        document.getElementById('modalTitle').innerHTML = `<i class="fas fa-folder-open"></i> ${data.title}`;
+        const container = document.getElementById('fileListContainer');
+        container.innerHTML = '';
+        
+        if(data.files.length === 0) {
+            container.innerHTML = '<div style="text-align:center; padding:40px;">No files available</div>';
+        } else {
+            data.files.forEach((file) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <div class="file-info-left">
+                        <div class="file-icon"><i class="fas fa-file-pdf"></i></div>
+                        <div class="file-details">
+                            <h4>${file.name}</h4>
+                            <p><i class="fab fa-google-drive"></i> Google Drive • PDF Document</p>
+                        </div>
+                    </div>
+                    <button class="file-select-btn" onclick="downloadFromDrive('${file.fileId}', '${file.name}')">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                `;
+                container.appendChild(fileItem);
+            });
+        }
+        
+        document.getElementById('fileModal').style.display = 'flex';
+    }
+    
+    // Close modal
+    function closeFileModal() {
+        document.getElementById('fileModal').style.display = 'none';
+    }
+    
+    // Download from Google Drive
+    function downloadFromDrive(fileId, fileName) {
+        if(!fileId || fileId === 'YOUR_GOOGLE_DRIVE_ID_2020_OL' || fileId.includes('YOUR_GOOGLE_DRIVE_ID')) {
+            showToast(`⚠️ Please configure Google Drive File ID first!`, true);
+            showDriveInstructions();
+            return;
+        }
+        
+        const downloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = fileName + '.pdf';
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast(`✅ Downloading: ${fileName}.pdf`);
+        closeFileModal();
+    }
+    
+    // Show Google Drive setup instructions
+    function showDriveInstructions() {
+        const instructionDiv = document.createElement('div');
+        instructionDiv.style.cssText = `
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            background: linear-gradient(135deg, #a855f7, #ec4899);
+            color: white;
+            padding: 20px;
+            border-radius: 20px;
+            max-width: 350px;
+            z-index: 30000;
+            animation: slideInRight 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        `;
+        instructionDiv.innerHTML = `
+            <h4><i class="fab fa-google"></i> Google Drive Setup Guide</h4>
+            <p style="font-size: 0.85rem; margin: 10px 0;">1️⃣ Upload PDF to Google Drive</p>
+            <p style="font-size: 0.85rem; margin: 5px 0;">2️⃣ Right-click file → Share → Get link</p>
+            <p style="font-size: 0.85rem; margin: 5px 0;">3️⃣ Set to "Anyone with the link"</p>
+            <p style="font-size: 0.85rem; margin: 5px 0;">4️⃣ Copy FILE_ID from URL</p>
+            <p style="font-size: 0.85rem; margin: 5px 0;">5️⃣ Replace in fileDatabase</p>
+            <p style="font-size: 0.75rem; margin-top: 8px;">Example: drive.google.com/file/d/<b>FILE_ID_HERE</b>/view</p>
+            <button onclick="this.parentElement.remove()" style="margin-top: 10px; padding: 5px 15px; background: white; border: none; border-radius: 20px; cursor: pointer;">Got it</button>
+        `;
+        document.body.appendChild(instructionDiv);
+        setTimeout(() => instructionDiv.remove(), 12000);
+    }
+    
+    // Toast notification
+    function showToast(message, isError = false) {
+        const toast = document.createElement('div');
+        toast.className = 'toast-notification';
+        toast.style.background = isError ? 'linear-gradient(135deg, #ff4444, #cc0000)' : 'linear-gradient(135deg, #00d26a, #0ae0c0)';
+        toast.style.color = isError ? 'white' : '#0a1a2a';
+        toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-triangle' : 'fa-check-circle'}"></i> ${message}`;
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
+    
+    // Search functionality
+    const searchInput = document.getElementById('searchInput');
+    const allCards = document.querySelectorAll('.resource-card');
+    
+    function filterResources() {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        allCards.forEach(card => {
+            const cardName = card.getAttribute('data-name') || '';
+            const cardTitle = card.querySelector('.card-title')?.innerText.toLowerCase() || '';
+            const cardDesc = card.querySelector('.card-desc')?.innerText.toLowerCase() || '';
+            if (searchTerm === '' || cardName.includes(searchTerm) || cardTitle.includes(searchTerm) || cardDesc.includes(searchTerm)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+    
+    searchInput.addEventListener('input', filterResources);
+    
+    // Close modal when clicking outside
+    document.getElementById('fileModal')?.addEventListener('click', (e) => {
+        if(e.target === document.getElementById('fileModal')) closeFileModal();
+    });
+    
+    // Keyboard close
+    document.addEventListener('keydown', (e) => {
+        if(e.key === 'Escape' && document.getElementById('fileModal').style.display === 'flex') {
+            closeFileModal();
+        }
+    });
+    
+    console.log('✅ Download Page Ready!');
+    console.log('📝 All download buttons now show file selection list');
+    console.log('🔧 Replace "YOUR_GOOGLE_DRIVE_ID_XXX" with your actual Google Drive file IDs');
+</script>
+</body>
+</html>

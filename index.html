@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>SkillNest · English Learning Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="shortcut icon" href="image/icon.png" type="image/x-icon">
+    <meta name="description" content="SkillNest - Complete Student Management System with Attendance, Exam Marks, Payments, Skills tracking and more.">
+    <meta name="keywords" content="student management, attendance system, exam marks, skill tracking, school management, SkillNest">
+    <meta name="author" content="SkillNest Team">
+    <meta name="google-site-verification" content="e5nRg5nlmSJ735A9bMwL9XHcQ8s4QOcj8j-MT7VyqrU" />
+
+<!-- ========== PWA TAGS - index.html 
+
+<!-- Manifest -->
+<link rel="manifest" href="/English/manifest.json">
+
+<!-- Theme Color -->
+<meta name="theme-color" content="#00f2fe">
+
+<!-- iOS Support -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SkillNest">
+<link rel="apple-touch-icon" href="image/icon.png">
+
+<!-- Service Worker Register -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/English/sw.js')
+        .then(() => console.log('SW registered'))
+        .catch(err => console.log('SW error:', err));
+    });
+  }
+</script>
+
+<!-- ================================================================ -->
+
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Dark Mode (Default) */
+        :root {
+            --bg-deep: #07070f;
+            --bg-surface: #0f0f1c;
+            --bg-card: rgba(12, 18, 28, 0.85);
+            --neon-teal: #00f2fe;
+            --neon-emerald: #00d26a;
+            --neon-purple: #a855f7;
+            --neon-pink: #ec4899;
+            --neon-orange: #f59e0b;
+            --neon-blue: #3b82f6;
+            --neon-cyan: #06b6d4;
+            --text-primary: #f0f3fa;
+            --text-secondary: #9ca3cf;
+            --text-dim: #6b7280;
+            --border-glow: rgba(0, 242, 254, 0.2);
+            --bottom-nav-bg: rgba(10, 14, 26, 0.95);
+            --glass-bg: rgba(255,255,255,0.04);
+            --glass-border: rgba(255,255,255,0.06);
+            --radius-lg: 32px;
+            --radius-sm: 20px;
+            --transition: all 0.45s cubic-bezier(0.22,0.61,0.36,1);
+        }
+
+        /* Light Mode */
+        body.light-mode {
+            --bg-deep: #f0f4f8;
+            --bg-surface: #ffffff;
+            --bg-card: rgba(255, 255, 255, 0.95);
+            --text-primary: #1a2732;
+            --text-secondary: #5a6b7b;
+            --text-dim: #64748b;
+            --border-glow: rgba(0, 210, 106, 0.3);
+            --bottom-nav-bg: rgba(255, 255, 255, 0.98);
+            --glass-bg: rgba(255,255,255,0.7);
+            --glass-border: rgba(0,0,0,0.08);
+        }
+
+        body.light-mode .glass-card,
+        body.light-mode .navbar,
+        body.light-mode .bottom-nav,
+        body.light-mode .course-card,
+        body.light-mode .teacher-card,
+        body.light-mode .stat-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+        body.light-mode .form-input { background: #f8fafc; border: 1px solid #e2e8f0; color: #0f172f; }
+        body.light-mode .action-btn { background: #f1f5f9; border-color: #cbd5e1; color: #0f172f; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-deep);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            transition: background 0.3s, color 0.2s;
+            padding-bottom: 75px;
+        }
+
+        /* Background Orbs */
+        .bg-orbs { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+        .bg-orb { position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.12; animation: orbFloat 25s infinite ease-in-out; }
+        .bg-orb:nth-child(1){ width: 600px; height: 600px; background: var(--neon-purple); top: -200px; left: -150px; }
+        .bg-orb:nth-child(2){ width: 450px; height: 450px; background: var(--neon-pink); bottom: -150px; right: -100px; animation-delay: -8s; }
+        .bg-orb:nth-child(3){ width: 350px; height: 350px; background: var(--neon-teal); top: 50%; left: 60%; animation-delay: -16s; }
+        .bg-orb:nth-child(4){ width: 280px; height: 280px; background: var(--neon-cyan); top: 20%; right: 25%; animation-delay: -4s; }
+        body.light-mode .bg-orb { opacity: 0.06; }
+        @keyframes orbFloat { 0%,100%{ transform: translate(0,0) scale(1); } 25%{ transform: translate(50px,-40px) scale(1.1); } 50%{ transform: translate(-30px,30px) scale(0.9); } 75%{ transform: translate(-40px,-20px) scale(1.05); } }
+
+        /* Glass Card with Shine Effect */
+        .glass-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(22px) saturate(180%);
+            -webkit-backdrop-filter: blur(22px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), rgba(255,255,255,0.25), rgba(255,255,255,0.15), transparent);
+            animation: shine 4s ease-in-out infinite;
+        }
+        @keyframes shine { 0%,100%{ opacity: 0.3; transform: translateX(-20%); } 50%{ opacity: 1; transform: translateX(20%); } }
+        .glass-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(168,85,247,0.25);
+            box-shadow: 0 0 70px rgba(168,85,247,0.18), 0 25px 55px rgba(0,0,0,0.4);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 28px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Top Navbar */
+        .navbar {
+            position: sticky;
+            top: 20px;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 28px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(22px) saturate(180%);
+            border-radius: 80px;
+            margin: 16px 0;
+            border: 1px solid var(--glass-border);
+        }
+        .logo {
+            font-size: 1.7rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--neon-purple), var(--neon-pink), var(--neon-cyan));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        .nav-links { display: flex; gap: 14px; align-items: center; }
+        .nav-links a { text-decoration: none; color: var(--text-secondary); font-weight: 500; transition: 0.2s; }
+        .nav-links a:hover { color: var(--neon-purple); }
+        .btn-neon {
+            padding: 12px 26px;
+            border-radius: 50px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.92rem;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, var(--neon-purple), var(--neon-pink));
+            color: white;
+            box-shadow: 0 0 30px rgba(168,85,247,0.25);
+        }
+        .theme-nav-btn {
+            background: rgba(0,242,254,0.1);
+            border: 1px solid var(--border-glow);
+            border-radius: 40px;
+            padding: 8px 16px;
+            cursor: pointer;
+            color: var(--text-primary);
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .hamburger { display: none; font-size: 1.6rem; cursor: pointer; background: var(--glass-bg); padding: 8px 14px; border-radius: 40px; }
+
+        /* Mobile Navigation Overlay */
+        .mobile-nav {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 75%;
+            max-width: 320px;
+            height: 100vh;
+            background: rgba(15,15,28,0.98);
+            backdrop-filter: blur(30px);
+            z-index: 1000;
+            padding: 80px 28px 40px;
+            transition: right 0.35s ease-in-out;
+            border-left: 1px solid rgba(255,255,255,0.06);
+        }
+        .mobile-nav.open { right: 0; }
+        .mobile-nav ul { list-style: none; display: flex; flex-direction: column; gap: 24px; }
+        .mobile-nav ul li a { color: var(--text-primary); font-size: 1.2rem; text-decoration: none; display: flex; align-items: center; gap: 12px; transition: 0.2s; }
+        .mobile-nav ul li a:hover { color: var(--neon-purple); }
+        .mobile-close { position: absolute; top: 20px; right: 24px; font-size: 2rem; background: none; border: none; color: var(--text-primary); cursor: pointer; }
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.25s;
+        }
+        .overlay.active { visibility: visible; opacity: 1; }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--bottom-nav-bg);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border-glow);
+            display: none;
+            justify-content: space-around;
+            align-items: center;
+            padding: 10px 12px 20px;
+            z-index: 1000;
+            border-radius: 25px 25px 0 0;
+        }
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 0.7rem;
+            transition: var(--transition);
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 30px;
+        }
+        .bottom-nav-item i { font-size: 1.3rem; }
+        .bottom-nav-item.active { color: var(--neon-teal); background: rgba(0,242,254,0.1); }
+
+        /* Hero */
+        .hero { display: flex; flex-wrap: wrap; gap: 40px; padding: 50px 0 30px; align-items: center; }
+        .hero h1 { font-size: 3.2rem; font-weight: 800; background: linear-gradient(125deg, #fff, #00f2fe); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 20px; }
+        
+        /* Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; margin: 40px 0; }
+        .stat-card { padding: 28px; text-align: center; border-radius: var(--radius-sm); background: var(--bg-card); border-bottom: 3px solid var(--neon-emerald); }
+        .counter { font-size: 2.5rem; font-weight: 800; color: var(--neon-teal); }
+        
+        .btn-primary {
+            background: linear-gradient(95deg, #00d26a, #0ae0c0);
+            border: none;
+            padding: 14px 34px;
+            border-radius: 44px;
+            color: #0a0f1f;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--neon-teal);
+            padding: 14px 34px;
+            border-radius: 44px;
+            color: var(--neon-teal);
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .action-btn {
+            background: rgba(0,210,106,0.1);
+            padding: 12px 28px;
+            border-radius: 60px;
+            border: 1px solid rgba(0,242,254,0.3);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-block;
+            text-decoration: none;
+        }
+        .btn-wa {
+            background: #25D366;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 22px;
+            border-radius: 50px;
+            color: white;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        /* Teacher */
+        .teacher-showcase { display: flex; flex-wrap: wrap; gap: 28px; margin: 30px 0; }
+        .teacher-card { flex: 1; min-width: 300px; padding: 32px; border-radius: var(--radius-lg); background: var(--bg-card); }
+        .teacher-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--neon-purple); margin-bottom: 20px; }
+        .avatar-placeholder { width: 120px; height: 120px; border-radius: 50%; border: 3px solid var(--neon-purple); display: flex; align-items: center; justify-content: center; background: rgba(168,85,247,0.1); margin-bottom: 16px; }
+        .avatar-placeholder i { font-size: 2.5rem; color: var(--neon-purple); }
+        .qual-list { list-style: none; margin-top: 20px; }
+        .qual-list li { margin: 12px 0; display: flex; align-items: center; gap: 12px; }
+
+        .section-title { font-size: 2rem; margin: 40px 0 25px; display: flex; align-items: center; gap: 12px; }
+        .section-title i { color: var(--neon-purple); }
+        .courses-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 28px; }
+        .course-card { padding: 28px; border-radius: var(--radius-lg); background: var(--bg-card); }
+        .grade-badge { background: #00d26a20; display: inline-block; padding: 4px 12px; border-radius: 30px; font-size: 0.8rem; margin: 12px 0; color: #00d26a; }
+        .detail-badge { background: rgba(0,242,254,0.1); padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; display: inline-block; margin: 5px 0; }
+
+        .form-input {
+            padding: 14px 20px;
+            border-radius: 60px;
+            border: 1px solid var(--border-glow);
+            background: rgba(255,255,255,0.05);
+            color: var(--text-primary);
+            width: 100%;
+            max-width: 300px;
+            outline: none;
+        }
+        .submit-btn {
+            background: linear-gradient(95deg, #25D366, #128C7E);
+            border: none;
+            padding: 14px 32px;
+            border-radius: 60px;
+            font-weight: 700;
+            color: white;
+            cursor: pointer;
+        }
+
+        /* Slider */
+        .slider-wrap { margin: 24px 0; padding: 16px 0; overflow: hidden; border-radius: var(--radius-sm); }
+        .slider-track { display: flex; gap: 20px; width: max-content; animation: scrollX 35s linear infinite; }
+        .slider-track img { width: 300px; height: 190px; object-fit: cover; border-radius: 20px; }
+        .slider-wrap:hover .slider-track { animation-play-state: paused; }
+        @keyframes scrollX { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+        /* Timetable Modal */
+        .timetable-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        .timetable-content {
+            background: var(--bg-card);
+            border-radius: 28px;
+            max-width: 450px;
+            width: 90%;
+            padding: 28px;
+            text-align: center;
+            border: 1px solid var(--neon-teal);
+            animation: modalPop 0.3s ease;
+        }
+        @keyframes modalPop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .timetable-item { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid var(--border-glow); }
+        .grade-schedule { margin-top: 15px; padding: 10px; background: rgba(0,242,254,0.05); border-radius: 16px; }
+        .close-modal { margin-top: 20px; padding: 10px 20px; background: var(--neon-emerald); border: none; border-radius: 30px; cursor: pointer; font-weight: 600; }
+
+        /* Secret Admin Modal */
+        .secret-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.95);
+            backdrop-filter: blur(16px);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+        .secret-card {
+            background: rgba(15,15,28,0.95);
+            border-radius: var(--radius-lg);
+            max-width: 400px;
+            width: 100%;
+            padding: 35px 28px;
+            text-align: center;
+            border: 1px solid rgba(168,85,247,0.3);
+            animation: modalIn 0.3s ease;
+        }
+        @keyframes modalIn { from { opacity: 0; transform: scale(0.9) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .secret-input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 50px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.04);
+            color: white;
+            text-align: center;
+            font-size: 1rem;
+            margin-bottom: 14px;
+            outline: none;
+            letter-spacing: 2px;
+        }
+        .secret-input:focus { border-color: var(--neon-purple); box-shadow: 0 0 25px rgba(168,85,247,0.2); }
+        .secret-lock { font-size: 3.5rem; color: var(--neon-purple); margin-bottom: 14px; animation: lockPulse 2s infinite; }
+        @keyframes lockPulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.08); } }
+        @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+        
+        /* Loader */
+        .loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #05070f, #0a0e1a);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            transition: opacity 0.8s ease, visibility 0.8s;
+        }
+        body.light-mode .loader-overlay { background: linear-gradient(135deg, #ffffff, #f0f4f8); }
+        .loader { display: flex; gap: 12px; }
+        .loader span { width: 20px; height: 20px; background: linear-gradient(135deg, #fe4ff5, #fe00a9); border-radius: 50%; animation: bounce 0.6s infinite alternate; }
+        .loader span:nth-child(2) { animation-delay: 0.2s; background: linear-gradient(135deg, #43e97b, #38f9d7);}
+        .loader span:nth-child(3) { animation-delay: 0.4s; background: linear-gradient(135deg, #fa709a, #fee140);}
+        @keyframes bounce { 0% { transform: translateY(0px); opacity: 0.3;} 100% { transform: translateY(-30px); opacity: 1;} }
+
+        .floating-wa {
+            position: fixed;
+            bottom: 85px;
+            right: 20px;
+            background: #25D366;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            z-index: 99;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(37,211,102,0.4);
+        }
+
+        footer { background: var(--bg-card); border-radius: 32px; padding: 40px 32px; margin: 50px 0 30px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 30px; }
+        .copyright { width: 100%; text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05); font-size: 0.8rem; }
+
+        @media (max-width: 900px) {
+            .nav-links { display: none; }
+            .hamburger { display: block; }
+            .bottom-nav { display: flex; }
+            .hero h1 { font-size: 2rem; }
+            .floating-wa { bottom: 85px; }
+            .container { padding: 0 16px; }
+            .section-title { font-size: 1.5rem; }
+        }
+
+        .poster-popup {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 10000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        animation: popupFadeIn 0.4s ease;
+    }
+    
+    .popup-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.85);
+        backdrop-filter: blur(10px);
+    }
+    
+    .popup-container {
+        position: relative;
+        max-width: 650px;
+        width: 90%;
+        background: var(--bg-card);
+        border-radius: 28px;
+        overflow: hidden;
+        box-shadow: 0 0 50px rgba(168,85,247,0.3);
+        border: 1px solid var(--neon-teal);
+        z-index: 10001;
+        animation: popupSlideUp 0.4s ease;
+    }
+    
+    @keyframes popupFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @keyframes popupSlideUp {
+        from { transform: translateY(50px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .popup-close {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        font-size: 32px;
+        background: rgba(0,0,0,0.6);
+        border: none;
+        color: white;
+        cursor: pointer;
+        z-index: 10;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: 0.3s;
+    }
+    
+    .popup-close:hover {
+        background: #ff4444;
+        transform: scale(1.1);
+    }
+    
+    .slideshow-container {
+        position: relative;
+        width: 100%;
+    }
+    
+    .slide {
+        display: none;
+        width: 100%;
+    }
+    
+    .slide img {
+        width: 100%;
+        height: auto;
+        max-height: 400px;
+        object-fit: cover;
+    }
+    
+    .slide-caption {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(transparent, rgba(0,0,0,0.8));
+        color: white;
+        padding: 20px;
+        text-align: center;
+        font-weight: 600;
+        font-size: 1rem;
+    }
+    
+    .prev, .next {
+        cursor: pointer;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        padding: 16px;
+        color: white;
+        font-weight: bold;
+        font-size: 24px;
+        transition: 0.3s;
+        border-radius: 50%;
+        user-select: none;
+        background: rgba(0,0,0,0.5);
+        width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+    }
+    
+    .prev { left: 15px; }
+    .next { right: 15px; }
+    
+    .prev:hover, .next:hover {
+        background: var(--neon-teal);
+        color: #0a0f1f;
+    }
+    
+    .dots-container {
+        text-align: center;
+        padding: 15px;
+        background: rgba(0,0,0,0.5);
+    }
+    
+    .dot {
+        cursor: pointer;
+        height: 12px;
+        width: 12px;
+        margin: 0 5px;
+        background-color: rgba(255,255,255,0.5);
+        border-radius: 50%;
+        display: inline-block;
+        transition: 0.3s;
+    }
+    
+    .dot.active, .dot:hover {
+        background-color: var(--neon-teal);
+        transform: scale(1.2);
+    }
+    
+    .fade {
+        animation: fadeEffect 1s;
+    }
+    
+    @keyframes fadeEffect {
+        from { opacity: 0.4; }
+        to { opacity: 1; }
+    }
+    
+    .popup-footer {
+        display: flex;
+        justify-content: space-between;
+        gap: 15px;
+        padding: 20px;
+        background: var(--bg-card);
+        border-top: 1px solid var(--border-glow);
+    }
+    
+    .popup-dont-show {
+        background: transparent;
+        border: 1px solid var(--border-glow);
+        padding: 12px 20px;
+        border-radius: 40px;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: 0.3s;
+        font-size: 0.85rem;
+    }
+    
+    .popup-dont-show:hover {
+        border-color: #ff4444;
+        color: #ff4444;
+    }
+    
+    .popup-register {
+        background: linear-gradient(135deg, #25D366, #128C7E);
+        border: none;
+        padding: 12px 28px;
+        border-radius: 40px;
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .popup-register:hover {
+        transform: scale(1.02);
+        box-shadow: 0 0 20px rgba(37,211,102,0.4);
+    }
+    
+    @media (max-width: 600px) {
+        .prev, .next { padding: 10px; width: 35px; height: 35px; font-size: 18px; }
+        .slide-caption { font-size: 0.8rem; padding: 12px; }
+        .popup-footer { flex-direction: column; }
+    }
+
+    </style>
+</head>
+<body>
+
+<div class="bg-orbs"><div class="bg-orb"></div><div class="bg-orb"></div><div class="bg-orb"></div><div class="bg-orb"></div></div>
+
+<!-- Loader -->
+<div class="loader-overlay" id="loaderOverlay">
+    <div class="loader"><span></span><span></span><span></span></div>
+</div>
+
+<div id="mainContent" style="opacity:0; transition: opacity 0.6s;">
+    <!-- Mobile Navigation -->
+    <div class="overlay" id="mobileOverlay"></div>
+    <div class="mobile-nav" id="mobileNav">
+        <button class="mobile-close" id="closeMenuBtn"><i class="fas fa-times"></i></button>
+        <ul>
+            <li><a href="#" id="mHome"><i class="fas fa-home"></i> Home</a></li>
+            <li><a href="#" id="mTeacher"><i class="fas fa-chalkboard-user"></i> Teacher</a></li>
+            <li><a href="#" id="mResources"><i class="fas fa-download"></i> Resources</a></li>
+            <li><a href="#" id="mContact"><i class="fab fa-whatsapp"></i> Contact</a></li>
+            <li><a href="My English student.html"><i class="fas fa-sign-in-alt"></i> Student Login</a></li>
+        </ul>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav" id="bottomNav">
+        <div class="bottom-nav-item" data-nav="home"><i class="fas fa-home"></i><span>Home</span></div>
+        <div class="bottom-nav-item" data-nav="teacher"><i class="fas fa-chalkboard-user"></i><span>Teacher</span></div>
+        <div class="bottom-nav-item" data-nav="courses"><i class="fas fa-book-open"></i><span>Classes</span></div>
+        <div class="bottom-nav-item" data-nav="timetable"><i class="fas fa-calendar-alt"></i><span>Timetable</span></div>
+        <div class="bottom-nav-item" data-nav="theme" id="mobileThemeBtnBottom"><i class="fas fa-moon" id="mobileThemeIconBottom"></i><span>Mode</span></div>
+    </div>
+
+    <div class="container">
+        <div class="navbar">
+            <div class="logo" id="logoClick"><i class="fas fa-graduation-cap"></i> SkillNest</div>
+            <div class="nav-links">
+                <a href="#" id="navHome">Home</a>
+                <a href="#" id="navCourses">Courses</a>
+                <a href="#" id="navTeacher">Teacher</a>
+                <a href="#" id="navContact">Contact</a>
+                <a href="My English student.html" class="btn-neon"><i class="fas fa-sign-in-alt"></i> Student Login</a>
+                <button class="theme-nav-btn" id="navThemeToggle"><i class="fas fa-moon" id="navThemeIcon"></i> <span>Mode</span></button>
+            </div>
+            <div class="hamburger" id="hamburgerBtn"><i class="fas fa-bars"></i></div>
+        </div>
+
+        <!-- Slider -->
+        <div class="slider-wrap glass-card"><div class="slider-track" id="sliderTrack"></div></div>
+
+        <!-- Hero -->
+        <div class="hero">
+            <div style="flex:1">
+                <div style="background:#00d26a20; display:inline-block; padding:5px 18px; border-radius:30px; margin-bottom:20px;"><i class="fas fa-brain"></i> Friendly, Expert Guidance</div>
+                <h1>English with <span style="color:#00f2fe;">Confidence</span></h1>
+                <p style="color:var(--text-secondary); margin:20px 0; font-size:1.1rem;">Qualified Government School English Teacher · O/L & A/L Examiner · Physical classes in Badulla</p>
+                <div style="display:flex; gap:20px; flex-wrap:wrap;">
+                    <button class="btn-primary" id="heroJoinBtn"><i class="fab fa-whatsapp"></i> Join Class</button>
+                    <button class="btn-outline" id="heroCoursesBtn">Explore Courses →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Counters -->
+        <div class="stats-grid">
+            <div class="stat-card glass-card"><div class="counter" data-target="50">0</div><p>Active Students</p><span class="trend-up"><i class="fas fa-arrow-up"></i> +23% this year</span></div>
+            <div class="stat-card glass-card"><div class="counter" data-target="99">0</div><p>Pass Rate</p><span class="trend-up"><i class="fas fa-star"></i> O/L & A/L Success</span></div>
+            <div class="stat-card glass-card"><div class="counter" data-target="8">0</div><p>Years Experience</p><span class="trend-up"><i class="fas fa-certificate"></i> Govt. School Teacher</span></div>
+            <div class="stat-card glass-card"><div class="counter" data-target="100">0</div><p>Students Guided</p><span class="trend-up"><i class="fas fa-graduation-cap"></i> & counting</span></div>
+        </div>
+
+        <!-- Teacher Section -->
+        <div class="section-title"><i class="fas fa-chalkboard-user"></i> Meet Your Teacher</div>
+        <div class="teacher-showcase">
+            <div class="teacher-card glass-card">
+                <img src="image/teacher image.jpg" alt="Teacher" class="teacher-img" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                <div class="avatar-placeholder" style="display:none;"><i class="fas fa-user-graduate"></i></div>
+                <h2>Ms. Madhavi Rathnayake</h2>
+                <p style="color:var(--neon-emerald);"><i class="fas fa-certificate"></i> Qualified Government School English Language Teacher</p>
+                <ul class="qual-list">
+                    <li><i class="fas fa-check-circle" style="color:#fbbf24;"></i> BEd in English (Global Straford Campus)</li>
+                    <li><i class="fas fa-check-circle" style="color:#34d399;"></i> O/L & A/L Test Answer Sheet Examiner</li>
+                    <li><i class="fas fa-check-circle" style="color:#f472b6;"></i> Government School English Teacher</li>
+                </ul>
+                <div style="margin-top:15px; padding-top:15px; border-top:1px solid rgba(255,255,255,0.1);">
+                    <p><i class="fas fa-phone-alt"></i> +94 76 789 9845</p>
+                    <p><i class="fas fa-envelope"></i> madhaviupeksha17@gmail.com</p>
+                </div>
+            </div>
+            <div class="teacher-card glass-card">
+                <h3><i class="fas fa-map-marker-alt" style="color:var(--neon-cyan);"></i> Class Location</h3>
+                <p><i class="fas fa-globe"></i> Physical Classes (Badulla, Sri Lanka)</p>
+                <p><i class="fas fa-building"></i> Salusala, Badulla</p>
+                <hr style="margin:15px 0;">
+                <h3><i class="fas fa-phone-alt" style="color:var(--neon-green);"></i> Contact</h3>
+                <p><i class="fas fa-mobile-alt"></i> +94 76 789 9845</p>
+                <p><i class="fas fa-envelope"></i> madhaviupeksha17@gmail.com</p>
+                <hr style="margin:15px 0;">
+                <h3><i class="fas fa-calendar-week"></i> Schedule</h3>
+                <p>📅 Saturday: 8:00 AM - 12:00 PM</p>
+                <p>📅 Sunday: 8:00 AM - 12:00 PM</p>
+                <hr style="margin:15px 0;">
+                <h3><i class="fas fa-gift"></i> Benefits</h3>
+                <p>✔️ Weekly progress reports<br>✔️ Individual mentoring<br>✔️ Interactive worksheets<br>✔️ Past paper discussions</p>
+                <a href="https://wa.me/94767899845" class="btn-wa" target="_blank" style="margin-top:15px;"><i class="fab fa-whatsapp"></i> Contact on WhatsApp</a>
+            </div>
+        </div>
+
+        <!-- Courses -->
+        <div class="section-title"><i class="fas fa-graduation-cap" style="color:var(--neon-emerald);"></i> Our Classes</div>
+        <div class="courses-grid" id="coursesGrid">
+            <div class="course-card glass-card" data-course="Grade 1-5 Beginner" data-schedule="Sat & Sun 8:00-10:00 AM" data-price="LKR 1000/mo"><h3>📘 Grade 1-5 Beginner</h3><div class="grade-badge">Grammar + Vocabulary</div><p>Build strong fundamentals with fun activities.</p><i class="fas fa-clock"></i> Saturday & Sunday: 8:00-10:00 AM <br><div class="detail-badge">LKR 1000/mo</div><br><button class="action-btn enrollBtn">Enroll Now →</button></div>
+            <div class="course-card glass-card" data-course="Grade 6-9 Foundation" data-schedule="Sat & Sun 8:00-10:00 AM" data-price="LKR 1000/mo"><h3>📘 Grade 6-9 Foundation</h3><div class="grade-badge">Grammar + Writing</div><p>Strengthen fundamentals with interactive sessions.</p><i class="fas fa-clock"></i> Saturday & Sunday: 8:00-10:00 AM <br><div class="detail-badge">LKR 1000/mo</div><br><button class="action-btn enrollBtn">Enroll Now →</button></div>
+            <div class="course-card glass-card" data-course="O/L English" data-schedule="Sat & Sun 10:00-12:00 PM" data-price="LKR 1000/mo"><h3>📗 O/L English</h3><div class="grade-badge">Exam Focus</div><p>Past papers, writing mastery, listening & speaking.</p><i class="fas fa-clock"></i> Saturday & Sunday: 10:00-12:00 PM <br><div class="detail-badge">LKR 1000/mo</div><br><button class="action-btn enrollBtn">Enroll Now →</button></div>
+            <div class="course-card glass-card" data-course="A/L General English" data-schedule="Sat & Sun 8:00-12:00 PM" data-price="LKR 2000/mo"><h3>📕 A/L General English</h3><div class="grade-badge">Advanced Level</div><p>Critical thinking, essay writing & literature.</p><i class="fas fa-clock"></i> Saturday & Sunday: 8:00-12:00 PM <br><div class="detail-badge">LKR 2000/mo</div><br><button class="action-btn enrollBtn">Enroll Now →</button></div>
+            <div class="course-card glass-card" data-course="Spoken English" data-schedule="Weekend Batches" data-price="Custom Pricing"><h3>🎯 Spoken English</h3><div class="grade-badge">Fluency</div><p>Real conversation practice & pronunciation.</p><i class="fas fa-clock"></i> Weekend Batches <br><div class="detail-badge">Custom Pricing</div><br><button class="action-btn enrollBtn">Enroll Now →</button></div>
+             <!-- NEW O/L PAPER CLASS CARD (December Start - Enabled only in September) -->
+            <div class="course-card glass-card" id="olPaperClassCard" data-course="O/L Paper Class (December Start)" data-schedule="Starts December | Weekly Paper Discussions" data-price="LKR 1500/mo"style="opacity:0.6; filter:grayscale(0.2);"><h3>📝 O/L Paper Class <span style="font-size:0.7rem; background:#f59e0b; padding:2px 8px; border-radius:20px; color:#000;">December Intake</span></h3><div class="grade-badge">⚠️ Registration Opens: September 1st</div><p><i class="fas fa-calendar-alt"></i> Starts December (Annual Batch)<br>Past paper discussions + Model papers + Examiner tips <br> Can join anyone who is not in O/L Class earlier </p> <i class="fas fa-clock"></i> Weekly Sessions (Saturday/Sunday)<br><div class="detail-badge">LKR 1500/mo</div><br><button class="action-btn enrollBtn" id="olPaperEnrollBtn" disabled style="background:#6b7280; cursor:not-allowed; opacity:0.7;"><i class="fas fa-lock"></i> Opens Sep 1</button><p id="olPaperCountdown" style="font-size:0.7rem; margin-top:8px; color:var(--neon-orange);"></p></div>
+        </div>
+
+        <!-- Download Resources -->
+        <div class="courses-grid" style="margin-top: 20px;" id="downloadSection">
+            <div class="course-card glass-card">
+                <h3><i class="fas fa-download" style="color: var(--neon-teal);"></i> Syllabus 2026</h3>
+                <p>Complete curriculum & learning roadmap.</p>
+                <div class="detail-badge">Updated for New Syllabus</div>
+                <a href="files.html" class="action-btn" style="display: block; text-align: center; margin-top: 15px;">Download Syllabus</a>
+            </div>
+            <div class="course-card glass-card">
+                <h3><i class="fas fa-book-open" style="color: var(--neon-pink);"></i> E-Books Library</h3>
+                <p>Essential reading for English mastery.</p>
+                <div class="detail-badge">15+ Reference Books</div>
+                <a href="files.html" class="action-btn" style="display: block; text-align: center; margin-top: 15px;">E-Books Pack</a>
+            </div>
+        </div>
+
+        <!-- Why Choose Us Section -->
+        <div class="section-title"><i class="fas fa-crown"></i> Why Choose Us</div>
+        <div class="courses-grid">
+            <div class="course-card glass-card" style="text-align:center"><i class="fas fa-robot fa-2x" style="color:#00f2fe;"></i><h3>Progress Analytics</h3><p>Personalized dashboards & weak area detection</p></div>
+            <div class="course-card glass-card" style="text-align:center"><i class="fas fa-chalkboard-user fa-2x" style="color:#00d26a;"></i><h3>Govt. Qualified Teacher</h3><p>Ms. Madhavi, O/L & A/L examiner</p></div>
+            <div class="course-card glass-card" style="text-align:center"><i class="fas fa-laptop-code fa-2x"></i><h3>Hybrid Mode</h3><p>Physical classes in Badulla + online resources access</p></div>
+            <div class="course-card glass-card" style="text-align:center"><i class="fas fa-tasks fa-2x"></i><h3>Exam Simulation</h3><p>Monthly tests & answer sheet corrections by examiner</p></div>
+        </div>
+
+        <!-- Registration Form -->
+        <div class="glass-card" style="padding: 28px 34px; margin: 36px 0; text-align: center;">
+            <h3><i class="fab fa-whatsapp" style="color:#25D366;"></i> Quick Registration (WhatsApp Required)</h3><br>
+            <form id="whatsappRegForm" style="display:flex; flex-wrap:wrap; gap:16px; justify-content:center;">
+                <input type="text" id="regName" placeholder="Full Name" required class="form-input">
+                <input type="tel" id="regWhatsapp" placeholder="WhatsApp Number (+9476XXXXXXX)" required class="form-input">
+                <select id="regGrade" required class="form-input">
+                    <option value="" disabled selected>Select Grade</option>
+                    <option value="Grade 1-5">Grade 1-5 (Beginner)</option>
+                    <option value="Grade 6-9">Grade 6-9 (Foundation)</option>
+                    <option value="O/L">O/L English</option>
+                    <option value="A/L">A/L General English</option>
+                    <option value="Spoken English">Spoken English</option>
+                </select>
+                <button type="submit" class="submit-btn"><i class="fab fa-whatsapp"></i> Register</button>
+            </form>
+            <p id="regStatus" style="margin-top:20px;"></p>
+        </div>
+
+        <!-- CTA Box -->
+        <div class="glass-card" style="padding: 28px 34px; margin: 36px 0; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 20px;">
+            <div><h3><i class="fab fa-whatsapp" style="color:#25D366;"></i> Join Our Learning Community</h3><p style="color: var(--text-secondary);">Daily tips, events & direct teacher support</p><div class="detail-badge">Active Community</div></div>
+            <a href="https://wa.me/94767899845?text=Hello%20Teacher!%20I%20want%20to%20join%20the%20community" class="btn-wa" target="_blank"><i class="fab fa-whatsapp fa-lg"></i> Join Community</a>
+        </div>
+
+
+        
+
+<script>
+(function() {
+    const card = document.getElementById('olPaperClassCard');
+    const enrollBtn = document.getElementById('olPaperEnrollBtn');
+    const countdownEl = document.getElementById('olPaperCountdown');
+    
+    function checkAndUpdatePaperClass() {
+        const today = new Date();
+        const currentYear = today.getFullYear();
+        const currentMonth = today.getMonth(); // 0 = Jan, 8 = Sep
+        const currentDate = today.getDate();
+        
+        // Enable from September 1st to December 31st each year
+        const isSeptemberOrLater = (currentMonth >= 8); // Sep = 8, Oct=9, Nov=10, Dec=11
+        const isBeforeJanuaryNext = (currentMonth <= 11);
+        
+        let isEnabled = false;
+        let message = '';
+        
+        if (currentMonth === 8 && currentDate >= 1) { // September 1st onwards
+            isEnabled = true;
+            message = '✅ Registration Open! Enroll now.';
+        } else if (currentMonth > 8 && currentMonth <= 11) {
+            isEnabled = true;
+            message = '✅ Enrollment Open for December Batch. Join now!';
+        } else {
+            isEnabled = false;
+            // Calculate next September 1st
+            let nextSep = new Date(currentYear, 8, 1);
+            if (currentMonth >= 8) {
+                nextSep = new Date(currentYear + 1, 8, 1);
+            }
+            const diffDays = Math.ceil((nextSep - today) / (1000 * 60 * 60 * 24));
+            message = `🔒 Opens on Sep 1 (in ${diffDays} days)`;
+        }
+        
+        if (isEnabled) {
+            card.style.opacity = '1';
+            card.style.filter = 'grayscale(0)';
+            enrollBtn.disabled = false;
+            enrollBtn.style.background = 'linear-gradient(95deg, #00d26a, #0ae0c0)';
+            enrollBtn.style.cursor = 'pointer';
+            enrollBtn.style.opacity = '1';
+            enrollBtn.innerHTML = '<i class="fab fa-whatsapp"></i> Enroll Now →';
+            countdownEl.innerHTML = message;
+            countdownEl.style.color = '#00d26a';
+            
+            // Attach event if not already attached
+            enrollBtn.replaceWith(enrollBtn.cloneNode(true));
+            const newBtn = document.getElementById('olPaperEnrollBtn');
+            if(newBtn) {
+                newBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const course = "O/L Paper Class (December Start)";
+                    const schedule = "Weekly Paper Discussions | Dec Batch";
+                    const price = "LKR 1500/mo";
+                    window.open(`https://wa.me/94767899845?text=Hello%20Ms.%20Madhavi,%0A*New%20Enrollment%20Request*%0ACourse: ${encodeURIComponent(course)}%0ASchedule: ${schedule}%0APrice: ${price}%0APlease%20contact%20me.%0A%0AThank%20you!`, '_blank');
+                });
+            }
+        } else {
+            card.style.opacity = '0.6';
+            card.style.filter = 'grayscale(0.2)';
+            enrollBtn.disabled = true;
+            enrollBtn.style.background = '#6b7280';
+            enrollBtn.style.cursor = 'not-allowed';
+            enrollBtn.innerHTML = '<i class="fas fa-lock"></i> Opens Sep 1';
+            countdownEl.innerHTML = message;
+            countdownEl.style.color = 'var(--neon-orange)';
+        }
+    }
+    
+    checkAndUpdatePaperClass();
+    // Update countdown daily (optional: every hour)
+    setInterval(checkAndUpdatePaperClass, 3600000); // update every hour
+})();
+</script>        
+        <!-- Footer -->
+        <footer class="glass-card">
+            <div><img src="image/teacher image.jpg" style="width:55px; height:55px; border-radius:50%;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"><div class="avatar-placeholder" style="width:48px;height:48px;display:none;"><i class="fas fa-user-graduate" style="font-size:1.2rem;"></i></div><h3>Ms. Madhavi Rathnayake</h3><p>Qualified Government School English Teacher</p></div>
+            <div><h4>Quick Links</h4><a href="#" id="footerTeacher" style="color: var(--text-secondary); text-decoration: none; display: block;">Teacher Profile</a><a href="#" id="footerResources" style="color: var(--text-secondary); text-decoration: none; display: block;">Study Resources</a><a href="#" style="color: var(--text-secondary); text-decoration: none; display: block;">Past Papers</a></div>
+            <div><h4>Contact</h4><p><i class="fas fa-phone"></i> +94 76 789 9845</p><p><i class="fas fa-envelope"></i> madhaviupeksha17@gmail.com</p><p><i class="fas fa-map-pin"></i> Salusala, Badulla</p><p><i class="fas fa-clock"></i> Sat & Sun: 8AM - 12PM</p></div>
+            <div class="copyright">© 2026 SkillNest English — Elevate your English with Ms. Madhavi.<br>Developed by Thuli | UMR</div>
+        </footer>
+    </div>
+</div>
+
+<!-- Timetable Modal -->
+<div class="timetable-modal" id="timetableModal">
+    <div class="timetable-content">
+        <h3><i class="fas fa-calendar-alt"></i> Class Timetable</h3>
+        <div class="timetable-item"><span><i class="fas fa-clock"></i> Saturday</span><span>8:00 AM - 12:00 PM</span></div>
+        <div class="timetable-item"><span><i class="fas fa-clock"></i> Sunday</span><span>8:00 AM - 12:00 PM</span></div>
+        <div class="timetable-item"><span><i class="fas fa-map-marker-alt"></i> Location</span><span>Salusala, Badulla</span></div>
+        <div class="grade-schedule"><h4><i class="fas fa-graduation-cap"></i> Grade-wise Schedule</h4><div class="timetable-item"><span>📘 Grade 1-5 / 6-9</span><span>Saturday & Sunday: 8:00 - 10:00 AM</span></div><div class="timetable-item"><span>📗 O/L English</span><span>Saturday & Sunday: 10:00 - 12:00 PM</span></div><div class="timetable-item"><span>📕 A/L General English</span><span>Saturday & Sunday: 8:00 AM - 12:00 PM</span></div><div class="timetable-item"><span>🎯 Spoken English</span><span>Weekend (Flexible)</span></div></div>
+        <button class="close-modal" onclick="closeTimetable()">Close</button>
+    </div>
+</div>
+
+<!-- Secret Admin Modal -->
+<div class="secret-modal" id="secretModal">
+    <div class="secret-card">
+        <div class="secret-lock"><i class="fas fa-fingerprint"></i></div>
+        <h3 style="margin-bottom:6px; color:white;">Secret Admin Access</h3>
+        <p style="color: var(--text-dim); font-size: 0.8rem; margin-bottom: 20px;">Authorized Personnel Only</p>
+        <input type="password" id="secretPass" placeholder="Enter passkey..." class="secret-input">
+        <button onclick="verifySecret()" class="btn-neon" style="width:100%; display: flex; justify-content: center; align-items: center; text-align: center;">Verify Access</button>
+        <button onclick="closeSecret()" style="width:100%; padding:10px; background:transparent; border:none; color:var(--text-dim); cursor:pointer; margin-top:8px; display: flex; justify-content: center; align-items: center;">Cancel</button>
+        <p id="secretMsg" style="margin-top:10px; text-align: center;"></p>
+    </div>
+</div>
+
+<div class="floating-wa" id="floatWa"><i class="fab fa-whatsapp"></i></div>
+
+<script>
+    // Loader
+    window.addEventListener('load', () => {
+        const loader = document.getElementById('loaderOverlay');
+        const content = document.getElementById('mainContent');
+        setTimeout(() => { loader.style.opacity = '0'; loader.style.visibility = 'hidden'; content.style.opacity = '1'; }, 800);
+        setTimeout(() => { speakText('Welcome to Skill Nest Student Monitoring System.', true); }, 1200);
+        
+        // Initialize counters
+        const counters = document.querySelectorAll('.counter');
+        counters.forEach(counter => {
+            const target = parseInt(counter.getAttribute('data-target'));
+            let current = 0;
+            const increment = target / 50;
+            const updateCounter = () => {
+                if(current < target) {
+                    current += increment;
+                    counter.innerText = Math.ceil(current);
+                    setTimeout(updateCounter, 30);
+                } else {
+                    counter.innerText = target;
+                }
+            };
+            updateCounter();
+        });
+    });
+
+    // Theme Toggle
+    const navThemeBtn = document.getElementById('navThemeToggle');
+    const navIcon = document.getElementById('navThemeIcon');
+    const mobileThemeBottom = document.getElementById('mobileThemeBtnBottom');
+    const setTheme = (isLight) => {
+        if(isLight) { document.body.classList.add('light-mode'); navIcon.className = 'fas fa-sun'; if(mobileThemeBottom) document.getElementById('mobileThemeIconBottom').className = 'fas fa-sun'; localStorage.setItem('skillnest_theme', 'light'); }
+        else { document.body.classList.remove('light-mode'); navIcon.className = 'fas fa-moon'; if(mobileThemeBottom) document.getElementById('mobileThemeIconBottom').className = 'fas fa-moon'; localStorage.setItem('skillnest_theme', 'dark'); }
+    };
+    if(localStorage.getItem('skillnest_theme') === 'light') setTheme(true); else setTheme(false);
+    navThemeBtn?.addEventListener('click', () => setTheme(!document.body.classList.contains('light-mode')));
+    if(mobileThemeBottom) mobileThemeBottom.addEventListener('click', () => setTheme(!document.body.classList.contains('light-mode')));
+
+    // Slider
+    const track = document.getElementById('sliderTrack');
+    const images = ["image/img1.png", "image/img2.png", "image/img3.png", "image/img4.png", "image/img5.png", "image/img6.png", "image/img7.png", "image/img8.png", "image/img9.png"];
+    [...images, ...images].forEach(src => { let img = document.createElement('img'); img.src = src; img.alt = 'Classroom'; track.appendChild(img); });
+    document.querySelector('.slider-wrap')?.addEventListener('mouseenter', () => { track.style.animationPlayState = 'paused'; });
+    document.querySelector('.slider-wrap')?.addEventListener('mouseleave', () => { track.style.animationPlayState = 'running'; });
+
+    // Enroll buttons
+    document.querySelectorAll('.enrollBtn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const card = btn.closest('.course-card');
+            const course = card.dataset.course || 'English Course';
+            const schedule = card.dataset.schedule || 'Weekend';
+            const price = card.dataset.price || 'Contact';
+            window.open(`https://wa.me/94767899845?text=Hello%20Ms.%20Madhavi,%0A*New%20Enrollment%20Request*%0ACourse: ${encodeURIComponent(course)}%0ASchedule: ${schedule}%0APrice: ${price}%0APlease%20contact%20me.`, '_blank');
+        });
+    });
+
+    // WhatsApp Registration
+    document.getElementById('whatsappRegForm')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        let name = document.getElementById('regName').value.trim();
+        let whatsapp = document.getElementById('regWhatsapp').value.trim();
+        let grade = document.getElementById('regGrade').value;
+        if(!name || !whatsapp || !grade) { document.getElementById('regStatus').innerHTML = '<span style="color:#f87171;">⚠️ Please fill all fields</span>'; return; }
+        window.open(`https://wa.me/94767899845?text=Hello%20Ms.%20Madhavi,%0A*New%20Student%20Registration*%0AName: ${encodeURIComponent(name)}%0AGrade: ${encodeURIComponent(grade)}%0AWhatsApp: ${whatsapp}`, '_blank');
+        document.getElementById('regStatus').innerHTML = '<span style="color:#34d399;">✅ Registration sent!</span>';
+        document.getElementById('whatsappRegForm').reset();
+        setTimeout(() => document.getElementById('regStatus').innerHTML = '', 3000);
+    });
+
+    // Navigation
+    document.getElementById('heroJoinBtn')?.addEventListener('click', () => window.open('https://wa.me/94767899845', '_blank'));
+    document.getElementById('heroCoursesBtn')?.addEventListener('click', () => document.getElementById('coursesGrid').scrollIntoView({ behavior: 'smooth' }));
+    document.getElementById('floatWa')?.addEventListener('click', () => window.open('https://wa.me/94767899845', '_blank'));
+    
+    // Mobile Menu
+    const menuToggle = document.getElementById('hamburgerBtn');
+    const mobileNav = document.getElementById('mobileNav');
+    const mobileOverlay = document.getElementById('mobileOverlay');
+    const closeMenuBtn = document.getElementById('closeMenuBtn');
+    
+    menuToggle?.addEventListener('click', () => { mobileNav.classList.add('open'); mobileOverlay.classList.add('active'); });
+    closeMenuBtn?.addEventListener('click', () => { mobileNav.classList.remove('open'); mobileOverlay.classList.remove('active'); });
+    mobileOverlay?.addEventListener('click', () => { mobileNav.classList.remove('open'); mobileOverlay.classList.remove('active'); });
+    
+    document.getElementById('mHome')?.addEventListener('click', (e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); mobileNav.classList.remove('open'); mobileOverlay.classList.remove('active'); });
+    document.getElementById('mTeacher')?.addEventListener('click', (e) => { e.preventDefault(); document.querySelector('.teacher-showcase')?.scrollIntoView({ behavior: 'smooth' }); mobileNav.classList.remove('open'); mobileOverlay.classList.remove('active'); });
+    document.getElementById('mResources')?.addEventListener('click', (e) => { e.preventDefault(); document.getElementById('downloadSection')?.scrollIntoView({ behavior: 'smooth' }); mobileNav.classList.remove('open'); mobileOverlay.classList.remove('active'); });
+    document.getElementById('mContact')?.addEventListener('click', (e) => { e.preventDefault(); document.querySelector('.cta-box')?.scrollIntoView({ behavior: 'smooth' }); mobileNav.classList.remove('open'); mobileOverlay.classList.remove('active'); });
+    
+    document.getElementById('navHome')?.addEventListener('click', (e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+    document.getElementById('navCourses')?.addEventListener('click', (e) => { e.preventDefault(); document.getElementById('coursesGrid')?.scrollIntoView({ behavior: 'smooth' }); });
+    document.getElementById('navTeacher')?.addEventListener('click', (e) => { e.preventDefault(); document.querySelector('.teacher-showcase')?.scrollIntoView({ behavior: 'smooth' }); });
+    document.getElementById('navContact')?.addEventListener('click', (e) => { e.preventDefault(); document.querySelector('footer')?.scrollIntoView({ behavior: 'smooth' }); });
+    document.getElementById('footerTeacher')?.addEventListener('click', (e) => { e.preventDefault(); document.querySelector('.teacher-showcase')?.scrollIntoView({ behavior: 'smooth' }); });
+    document.getElementById('footerResources')?.addEventListener('click', (e) => { e.preventDefault(); document.getElementById('downloadSection')?.scrollIntoView({ behavior: 'smooth' }); });
+    
+    // Bottom Navigation
+    document.querySelectorAll('.bottom-nav-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const nav = item.dataset.nav;
+            if(nav === 'home') window.scrollTo({ top: 0, behavior: 'smooth' });
+            else if(nav === 'teacher') document.querySelector('.teacher-showcase')?.scrollIntoView({ behavior: 'smooth' });
+            else if(nav === 'courses') document.getElementById('coursesGrid')?.scrollIntoView({ behavior: 'smooth' });
+            else if(nav === 'timetable') document.getElementById('timetableModal').style.display = 'flex';
+        });
+    });
+    
+    window.closeTimetable = () => { document.getElementById('timetableModal').style.display = 'none'; };
+    document.getElementById('timetableModal')?.addEventListener('click', (e) => { if(e.target === document.getElementById('timetableModal')) closeTimetable(); });
+
+    // Secret Admin Access
+    let clicks = 0, timer;
+    document.getElementById('logoClick')?.addEventListener('click', () => { clicks++; clearTimeout(timer); if(clicks >= 5) { document.getElementById('secretModal').style.display = 'flex'; clicks=0; } timer = setTimeout(() => clicks=0, 2000); });
+    
+    window.verifySecret = function() {
+        let pass = document.getElementById('secretPass').value.trim();
+        let msg = document.getElementById('secretMsg');
+        if(pass === '001@Thuli_$Deshan:T1-M:T' || pass === 'E001@U_M_R:Admin-M/T') {
+            msg.innerHTML = '<span style="color:#34d399;">Access Granted! Redirecting...</span>';
+            speakText('Access Granted. Welcome to Admin Console', true);
+            setTimeout(() => { window.location.href = "My english Admin.html"; }, 1000);
+        } else {
+            msg.innerHTML = '<span style="color:#f87171;">Invalid passkey</span>';
+            speakText('Wrong password. Access denied.', false);
+            document.getElementById('secretPass').value = '';
+            document.getElementById('secretPass').style.animation = 'shake 0.3s ease';
+            setTimeout(() => { document.getElementById('secretPass').style.animation = ''; }, 300);
+        }
+    };
+    
+    window.closeSecret = () => { document.getElementById('secretModal').style.display = 'none'; document.getElementById('secretPass').value = ''; document.getElementById('secretMsg').innerHTML = ''; };
+    document.getElementById('secretModal')?.addEventListener('click', (e) => { if(e.target === document.getElementById('secretModal')) closeSecret(); });
+    document.addEventListener('keydown', (e) => { if(e.ctrlKey && e.shiftKey && e.key === 'A') { e.preventDefault(); document.getElementById('secretModal').style.display = 'flex'; } });
+    document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeSecret(); });
+
+    // Text to Speech
+    function speakText(message, isSuccess) {
+        if('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            let utterance = new SpeechSynthesisUtterance(message);
+            utterance.lang = 'en-US';
+            utterance.rate = isSuccess ? 1.0 : 0.9;
+            utterance.pitch = isSuccess ? 1.1 : 0.8;
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+</script>
+<script>
+ 
+// ==================== DATE-BASED AUTO BLOCK ====================
+const BLOCK_START = new Date('2026-05-12T00:00:00'); // Block start date
+const BLOCK_END = new Date('2026-05-17T09:50:59');   // Block end date
+const ACCESS_PASSWORD = 'skill2024';
+
+const now = new Date();
+
+if (now >= BLOCK_START && now <= BLOCK_END) {
+    if (sessionStorage.getItem('block_verified') !== 'true') {
+        document.getElementById('mainContent').style.display = 'none';
+        
+        const blockDiv = document.createElement('div');
+        blockDiv.id = 'dateBlock';
+        blockDiv.style.cssText = `
+            position:fixed;inset:0;background:rgba(7,7,15,0.97);z-index:99999;
+            display:flex;justify-content:center;align-items:center;
+            backdrop-filter:blur(20px);flex-direction:column;padding:20px;
+        `;
+        
+        // Calculate remaining time
+        const updateCountdown = () => {
+            const remaining = BLOCK_END - new Date();
+            if (remaining <= 0) {
+                sessionStorage.setItem('block_verified', 'true');
+                location.reload();
+                return;
+            }
+            const days = Math.floor(remaining / (1000*60*60*24));
+            const hours = Math.floor((remaining % (1000*60*60*24)) / (1000*60*60));
+            const minutes = Math.floor((remaining % (1000*60*60)) / (1000*60));
+            document.getElementById('countdownDisplay').innerHTML = `${days}d ${hours}h ${minutes}m`;
+        };
+        
+        blockDiv.innerHTML = `
+            <div style="text-align:center;max-width:440px;width:100%;">
+                <i class="fas fa-tools" style="font-size:4rem;color:#f59e0b;margin-bottom:20px;animation:pulse 2s infinite;"></i>
+                <h2 style="color:white;margin-bottom:8px;">Under Maintenance</h2>
+                <p style="color:#94a3b8;margin-bottom:8px;font-size:0.9rem;">We're making some improvements!</p>
+                <div style="background:rgba(255,255,255,0.03);border-radius:20px;padding:18px;margin:16px 0;border:1px solid rgba(255,255,255,0.06);">
+                    <p style="color:#94a3b8;font-size:0.8rem;margin-bottom:6px;">Estimated time remaining:</p>
+                    <span id="countdownDisplay" style="font-size:2rem;font-weight:800;color:#f59e0b;">Loading...</span>
+                </div>
+                <p style="color:#94a3b8;margin-bottom:16px;font-size:0.85rem;">Or enter access code:</p>
+                <input type="password" id="dateBlockPass" placeholder="Enter access code..." style="width:100%;padding:14px;border-radius:50px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:white;text-align:center;font-size:1rem;margin-bottom:12px;outline:none;">
+                <button onclick="verifyDateBlock()" style="width:100%;padding:14px;border-radius:50px;border:none;background:linear-gradient(135deg,#f59e0b,#d97706);color:white;font-weight:700;cursor:pointer;font-size:1rem;">Access Early</button>
+                <p id="dateBlockMsg" style="margin-top:10px;font-size:0.8rem;min-height:20px;"></p>
+            </div>
+        `;
+        
+        document.body.insertBefore(blockDiv, document.body.firstChild);
+        updateCountdown();
+        setInterval(updateCountdown, 60000); // Update every minute
+        
+        window.verifyDateBlock = function() {
+            const pass = document.getElementById('dateBlockPass').value.trim();
+            const msg = document.getElementById('dateBlockMsg');
+            if (pass === ACCESS_PASSWORD) {
+                sessionStorage.setItem('block_verified', 'true');
+                document.getElementById('dateBlock').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+            } else {
+                msg.innerHTML = '<span style="color:#f87171;">❌ Invalid code</span>';
+                document.getElementById('dateBlockPass').value = '';
+            }
+        };
+    }
+}
+</script>
+
+</body>
+</html>
